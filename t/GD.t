@@ -2,29 +2,29 @@
 
 # Copyright 2010 Kevin Ryde
 
-# This file is part of Math-Image.
+# This file is part of Image-Base-GD.
 #
-# Math-Image is free software; you can redistribute it and/or modify it
+# Image-Base-GD is free software; you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by the Free
 # Software Foundation; either version 3, or (at your option) any later
 # version.
 #
-# Math-Image is distributed in the hope that it will be useful, but
+# Image-Base-GD is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 # or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
 # for more details.
 #
-# You can get a copy of the GNU General Public License online at
-# http://www.gnu.org/licenses.
+# You should have received a copy of the GNU General Public License along
+# with Image-Base-GD.  If not, see <http://www.gnu.org/licenses/>.
 
 use 5.010;
 use strict;
 use warnings;
-use Test::More tests => 47;
+use Test::More tests => 58;
 
 BEGIN {
- SKIP: { eval 'use Test::NoWarnings; 1'
-           or skip 'Test::NoWarnings not available', 1; }
+#  SKIP: { eval 'use Test::NoWarnings; 1'
+#            or skip 'Test::NoWarnings not available', 1; }
 }
 
 require Image::Base::GD;
@@ -34,7 +34,7 @@ require Image::Base::GD;
 # VERSION
 
 {
-  my $want_version = 1;
+  my $want_version = 2;
   is ($Image::Base::GD::VERSION, $want_version, 'VERSION variable');
   is (Image::Base::GD->VERSION,  $want_version, 'VERSION class method');
 
@@ -142,7 +142,7 @@ SKIP: {
 }
 {
   my $image = Image::Base::GD->new (-width => 20,
-                                                    -height => 10);
+                                    -height => 10);
   $image->rectangle (0,0, 19,9, '#000000', 1);
   $image->line (0,0, 2,2, '#FFFFFF', 1);
   is ($image->xy (0,0), '#FFFFFF');
@@ -154,17 +154,23 @@ SKIP: {
 #------------------------------------------------------------------------------
 # xy
 
-{
-  my $image = Image::Base::GD->new (-width => 20,
-                                                    -height => 10);
-  $image->xy (0,0, '#112233');
-  $image->xy (1,1, '#445566');
-  $image->xy (2,2, 'black');
-  $image->xy (3,3, 'white');
-  is ($image->xy (0,0), '#112233', 'xy() 0,0');
-  is ($image->xy (1,1), '#445566', 'xy() 1,1');
-  is ($image->xy (2,2), '#000000', 'xy() black');
-  is ($image->xy (3,3), '#FFFFFF', 'xy() white');
+foreach my $truecolor (1,0) {
+  GD::Image->trueColor($truecolor);
+  my $image = Image::Base::GD->new (-width  => 100,
+                                    -height => 100);
+  $image->get('-gd')->alphaBlending(0);
+  diag "isTrueColor: ",$image->get('-gd')->isTrueColor;
+
+  $image->xy (50,60, '#112233');
+  $image->xy (51,61, '#445566');
+  $image->xy (52,62, 'black');
+  $image->xy (53,63, 'white');
+  $image->xy (54,64, 'None');
+  is ($image->xy (50,60), '#112233', 'xy() 50,50');
+  is ($image->xy (51,61), '#445566', 'xy() 51,51');
+  is ($image->xy (52,62), '#000000', 'xy() 52,62');
+  is ($image->xy (53,63), '#FFFFFF', 'xy() 53,63');
+  is ($image->xy (54,64), 'None',    'xy() 54,64');
 }
 
 #------------------------------------------------------------------------------
@@ -172,7 +178,7 @@ SKIP: {
 
 {
   my $image = Image::Base::GD->new (-width => 20,
-                                                    -height => 10);
+                                    -height => 10);
   $image->rectangle (0,0, 19,9, '#000000', 1);
   $image->rectangle (5,5, 7,7, '#FFFFFF', 0);
   is ($image->xy (5,5), '#FFFFFF');
@@ -196,7 +202,7 @@ SKIP: {
 
 {
   my $image = Image::Base::GD->new (-width => 20,
-                                                    -height => 10);
+                                    -height => 10);
   $image->rectangle (0,0, 19,9, 'None', 1);
 }
 
@@ -205,9 +211,35 @@ SKIP: {
 
 {
   my $image = Image::Base::GD->new (-width => 10,
-                                                           -height => 10);
+                                    -height => 10);
   is (scalar ($image->get ('-file')), undef);
   is_deeply  ([$image->get ('-file')], [undef]);
+}
+
+#------------------------------------------------------------------------------
+# add_colours
+
+foreach my $truecolor (1,0) {
+
+  GD::Image->trueColor(0);
+  my $image = Image::Base::GD->new (-width  => 100,
+                                    -height => 100,
+                                    -truecolor => $truecolor);
+  diag "isTrueColor: ",$image->get('-gd')->isTrueColor;
+  $image->get('-gd')->alphaBlending(0);
+  $image->add_colours ('#FF00FF', 'None', '#FFAAAA');
+
+  $image->xy (72,72, '#FF00FF');
+  is ($image->xy (72,72), '#FF00FF',
+      'add_colours() fetch #FF00FF');
+
+  $image->xy (51,51, '#FFAAAA');
+  is ($image->xy (51,51), '#FFAAAA',
+      'add_colours() fetch #FFAAAA');
+
+  $image->xy (60,60, 'None');
+  is ($image->xy (60,60), 'None',
+      'add_colours() fetch transparent');
 }
 
 exit 0;
