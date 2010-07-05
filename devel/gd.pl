@@ -24,6 +24,23 @@ use warnings;
 use Smart::Comments;
 
 {
+  require Image::Base::GD;
+  require Image::Xpm;
+  my $image = Image::Base::GD->new (-width => 50, -height => 15);
+  $image->rectangle (0,0, 49,29, 'black');
+  # $image->rectangle (3,3, 7,7, 'white');
+  # $image->ellipse (0,0, 11,10, 'white');
+
+  my $gd = $image->get('-gd');
+  $gd->ellipse (5,5, 6,6, $image->colour_to_index('white'));
+
+  $image->save('/tmp/x.png');
+  system ("convert  -monochrome /tmp/x.png /tmp/x.xpm && cat /tmp/x.xpm");
+
+  exit 0;
+}
+
+{
   require GD;
   print GD->VERSION,"\n";
   my $gd = GD::Image->new (100,100, 1);
@@ -54,32 +71,9 @@ use Smart::Comments;
   }
   exit 0;
 }
-{
-  require Image::Base::GD;
-  my $gd = Image::Base::GD->new (-width => 10, -height => 10);
-  $gd->rectangle (0,0, 9,9, 'black');
-  $gd->rectangle (3,3, 7,7, 'white');
 
-#   my $newgd = $gd->new_from_image($newgd);
-#   $pixmap->save ('/tmp/x.xpm');
-#   print keys %$pixmap;
 
-  exit 0;
-}
 
-{
-  require Image::Base::GD;
-  require Image::Xpm;
-  my $gd = Image::Base::GD->new (-width => 10, -height => 10);
-  $gd->rectangle (0,0, 9,9, 'black');
-  $gd->rectangle (3,3, 7,7, 'white');
-
-  my $pixmap = $gd->new_from_image('Image::Xpm');
-  $pixmap->save ('/tmp/x.xpm');
-  print keys %$pixmap;
-
-  exit 0;
-}
 
 
 {

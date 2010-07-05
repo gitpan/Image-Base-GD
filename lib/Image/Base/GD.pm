@@ -28,7 +28,7 @@ use base 'Image::Base';
 #use Smart::Comments;
 
 use vars '$VERSION';
-$VERSION = 2;
+$VERSION = 3;
 
 sub new {
   my ($class, %params) = @_;
@@ -43,11 +43,11 @@ sub new {
     }
     # inherit everything else
     %params = (%$self, %params);
+    ### copy params: \%params
   }
 
   my $self = bless { -allocate_colours => 1,
-                     -zlib_compression => -1,
-                     %params }, $class;
+                     -zlib_compression => -1 }, $class;
   if (! defined $params{'-gd'}) {
     my $gd;
     if (defined $params{'-file'}) {
@@ -71,6 +71,7 @@ sub new {
     $self->{'-gd'} = $gd;
   }
   $self->set (%params);
+  ### new made: $self
   return $self;
 }
 
@@ -93,6 +94,7 @@ sub _get {
 
 sub set {
   my ($self, %param) = @_;
+  ### Image-Base-GD set(): \%param
 
   foreach my $key ('-width', '-height', '-ncolours') {
     if (exists $param{$key}) {
@@ -164,8 +166,8 @@ sub xy {
       ### is transparent
       return 'None';
     }
-    if ($pixel > 0xFFFFFF) {
-      ### has some alpha, treat as transparent
+    if ($pixel >= 0x7F000000) {
+      ### pixel has fully-transparent alpha 0x7F
       return 'None';
     }
     ### rgb: $gd->rgb($pixel)
@@ -184,12 +186,30 @@ sub rectangle {
   ### index: $self->colour_to_index($colour)
   $self->{'-gd'}->$method ($x1,$y1,$x2,$y2, $self->colour_to_index($colour));
 }
+
 sub ellipse {
   my ($self, $x1, $y1, $x2, $y2, $colour) = @_;
   ### Image-GD ellipse: "$x1, $y1, $x2, $y2, $colour"
-  $self->{'-gd'}->ellipse ($x1, $y1,
-                           $x2-$x1+1, $y2-$y1+1,
-                           $self->colour_to_index($colour));
+
+  # If width $xw or height $yw is an odd number then GD draws the extra
+  # pixel on the higher value side, ie. the centre is the rounded-down
+  # position.  Hope that can be relied on ...
+  #
+  my $xw = $x2 - $x1;
+  if (! ($xw & 1)) {
+    my $yw = $y2 - $y1;
+    if (! ($yw & 1)) {
+      ### x centre: $x1 + $xw/2
+      ### y centre: $y1 + $yw/2
+      ### $xw+1
+      ### $yw+1
+      $self->{'-gd'}->ellipse ($x1 + $xw/2, $y1 + $yw/2,
+                               $xw+1, $yw+1,
+                               $self->colour_to_index($colour));
+      return;
+    }
+  }
+  shift->SUPER::ellipse(@_);
 }
 
 sub add_colours {
@@ -278,7 +298,9 @@ sub colour_to_index {
 
 sub _colour_to_rgb255 {
   my ($colour) = @_;
-  if (my @rgb = ($colour =~ /^#([0-9A-F]{2})([0-9A-F]{2})([0-9A-F]{2})$/i)){
+  my @rgb;
+  if ((@rgb = ($colour =~ /^#([0-9A-F]{2})([0-9A-F]{2})([0-9A-F]{2})$/i))
+      || (@rgb = ($colour =~ /^#([0-9A-F]{2})[0-9A-F]{2}([0-9A-F]{2})[0-9A-F]{2}([0-9A-F]{2})[0-9A-F]{2}$/i))) {
     return map {hex} @rgb;
   }
   require GD::Simple;
@@ -288,7 +310,6 @@ sub _colour_to_rgb255 {
   }
   croak "Unknown colour: $colour";
 }
-
 
 1;
 __END__
@@ -307,6 +328,7 @@ Image::Base::GD -- draw PNG format images
  $image->rectangle (0,0, 99,99, 'white');
  $image->xy (20,20, 'black');
  $image->line (50,50, 70,70, '#FF00FF');
+ $image->line (50,50, 70,70, '#0000AAAA9999');
  $image->save ('/some/filename.png');
 
 =head1 CLASS HIERARCHY
@@ -318,12 +340,14 @@ C<Image::Base::GD> is a subclass of C<Image::Base>,
 
 =head1 DESCRIPTION
 
-C<Image::Base::GD> extends C<Image::Base> to create or update PNG
-format image files using the C<GD> module and library.
+C<Image::Base::GD> extends C<Image::Base> to create or update PNG format
+image files using the C<GD> module and library (version 2 or higher).
 
-Colour names are taken from the C<GD::Simple> C<color_table>, plus hex
-"#RRGGBB".  The special colour "None" means transparent.  Colours are
-allocated when first used.
+Colour names for drawing are taken from the C<GD::Simple> C<color_table>,
+plus hex "#RRGGBB" or "#RRRRGGGGBBBB".  Special colour "None" means
+transparent.  Colours are allocated when first used.  4-digit
+"#RRRRGGGGBBBB" forms are truncated to the high 2 digits since GD works in
+8-bit components.
 
 =head1 FUNCTIONS
 
@@ -344,18 +368,47 @@ Or a C<GD::Image> object can be given,
 
     $image = Image::Base::GD->new (-gd => $gdimageobject);
 
+=item C<$new_image = $image-E<gt>new (key=E<gt>value,...)>
+
+Create and return a copy of C<$image>.  The GD within C<$image> is cloned
+(per C<$gd-E<gt>clone>).  The optional parameters are applied to the new
+image as per C<set>.
+
+    # copy image, new compression level
+    my $new_image = $image->new (zlib_compression => 9);
+
+=item C<$colour = $image-E<gt>xy ($x, $y)>
+
+=item C<$image-E<gt>xy ($x, $y, $colour)>
+
+Get or set an individual pixel.
+
+Currently colours returned are in hex "#RRGGBB" form, or "None" for a fully
+transparent pixel.  Partly transparent pixels are returned as a colour.
+
+=item C<$image-E<gt>ellipse ($x1,$y1, $x2,$y2, $colour)>
+
+Draw an ellipse within the rectangle bounded by C<$x1>,C<$y1> and
+C<$x2>,C<$y2>.
+
+In the current implementation ellipses with an odd sides (when C<$x2-$x1+1>
+and C<$y2-$y1+1> are both odd numbers) are drawn with GD and the rest go to
+C<Image::Base>, because GD doesn't seem to draw even widths very well.  The
+different handling is a bit inconsistent though.
+
 =item C<$image-E<gt>add_colours ($name, $name, ...)>
 
-Add colours to the GD palette.  Colour names are the same as to C<xy> etc.
+Add colours to the GD palette.  Colour names are the same as to the drawing
+functions.
 
     $image->add_colours ('red', 'green', '#FF00FF');
 
 The drawing functions automatically add a colour if it doesn't already exist
-but C<add_colours> can be used to initialize the palette with particular
-desired colours.
+so C<add_colours> in not needed, but it can be used to initialize the
+palette with particular desired colours.
 
-For a truecolor GD C<add_colours> does nothing since in that case there's
-RGBA in each pixel rather than an index into a palette.
+For a truecolor GD C<add_colours> does nothing since in that case each pixel
+is an RGBA value rather than an index into a palette.
 
 =back
 
@@ -374,7 +427,7 @@ The size of a GD image cannot be changed once created.
 The number of colours allocated in the palette, or C<undef> on a truecolor
 GD (which doesn't have a palette).
 
-This colour count is similar to the C<-ncolours> of C<Image::Xpm>.
+This count is similar to the C<-ncolours> of C<Image::Xpm>.
 
 =item C<-zlib_compression> (integer 0-9 or -1)
 
@@ -394,7 +447,7 @@ Putting colour "None" into pixels requires GD "alpha blending" turned off.
 C<Image::Base::GD> turns off blending for GD objects it creates, but
 currently if you pass in a C<-gd> then you must set the blending yourself if
 you're going to use None.  Is that the best way?  The ideal might be to save
-and restore while drawing None, but there's no apparent way to read out the
+and restore while drawing None, but there's no apparent way to read the
 blending setting out of a GD to know what to restore.  Alternately maybe
 turn blending off and leave it off on first drawing any None.
 

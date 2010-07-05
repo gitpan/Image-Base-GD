@@ -8,6 +8,7 @@ debian/rules
 debian/source/format
 debian/watch
 devel/gd.pl
+devel/run.pl
 devel/unused.pl
 inc/my_pod2html
 inc/MyMakeMakerExtras.pm

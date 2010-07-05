@@ -310,7 +310,7 @@ check-copyright-years:
 # only a DEBUG non-zero number is bad, so an expression can copy a debug from
 # another package
 check-debug-constants:
-	if egrep -n 'DEBUG => [1-9]|^[ \t]*use Smart::Comments' $(EXE_FILES) $(TO_INST_PM); then exit 1; else exit 0; fi
+	if egrep -nH 'DEBUG => [1-9]|^[ \t]*use Smart::Comments' $(EXE_FILES) $(TO_INST_PM); then exit 1; else exit 0; fi
 
 check-spelling:
 	if egrep -nHi 'requrie|noticable|continous|existant|explict|agument|destionation|\bthe the\b|\bnote sure\b' -r . \
