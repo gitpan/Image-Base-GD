@@ -20,12 +20,11 @@
 use 5.010;
 use strict;
 use warnings;
-use Test::More tests => 125;
+use Test::More tests => 1104;
 
-# BEGIN {
-#  SKIP: { eval 'use Test::NoWarnings; 1'
-#            or skip 'Test::NoWarnings not available', 1; }
-# }
+use lib 't';
+use MyTestHelpers;
+BEGIN { MyTestHelpers::nowarnings() }
 
 require Image::Base::GD;
 
@@ -128,7 +127,7 @@ sub my_bounding_box_and_sides {
 # VERSION
 
 {
-  my $want_version = 3;
+  my $want_version = 4;
   is ($Image::Base::GD::VERSION, $want_version, 'VERSION variable');
   is (Image::Base::GD->VERSION,  $want_version, 'VERSION class method');
 
@@ -384,17 +383,18 @@ foreach my $truecolor (1,0) {
     foreach my $y2 ($y1+1 .. $y1+10) {
       next if (($y2-$y1)&1);  # only GD dispatched ones
 
-      my $image = Image::Base::GD->new (-width => 70,
+      my $image = Image::Base::GD->new (-width  => 70,
                                         -height => 30);
       $image->rectangle (0,0,69,29, '#000000');
       $image->ellipse ($x1,$y1, $x2,$y2, '#FFFFFF');
-      $image->save('/tmp/x.png');
-      system ("convert  -monochrome /tmp/x.png /tmp/x.xpm && cat /tmp/x.xpm");
       is (my_bounding_box_and_sides ($image, $x1,$y1, $x2,$y2, '#000000'),
           '', "ellipse $x1,$y1 $x2,$y2");
     }
   }
 }
+
+#       $image->save('/tmp/x.png');
+#       system ("convert  -monochrome /tmp/x.png /tmp/x.xpm && cat /tmp/x.xpm");
 
 
 #------------------------------------------------------------------------------
@@ -440,6 +440,31 @@ foreach my $truecolor (1,0) {
   $image->xy (60,60, 'None');
   is ($image->xy (60,60), 'None',
       'add_colours() fetch transparent');
+}
+
+
+#------------------------------------------------------------------------------
+
+sub base_ellipse_func {
+  my ($x1,$y1, $x2,$y2) = @_;
+  diag "ellipse $x1,$y1 $x2,$y2 check base";
+  my $xw = $x2 - $x1;
+  if (! ($xw & 1)) {
+    my $yw = $y2 - $y1;
+    if (! ($yw & 1)) {
+      diag "is GD";
+      return 0;
+    }
+  }
+  diag "is base";
+  return 1;
+}
+{
+  require MyTestImageBase;
+  my $image = Image::Base::GD->new (-width => 21,
+                                    -height => 10);
+  MyTestImageBase::check_image ($image,
+                                base_ellipse_func => \&base_ellipse_func);
 }
 
 exit 0;

@@ -42,20 +42,26 @@ our $VERSION = 1;
 
 use constant DEBUG => 0;
 
-my %table = ('apt-file'     => 'http://packages.debian.org/apt-file',
-             'apt-cache'    => 'http://packages.debian.org/apt',
-             'apt-rdepends' => 'http://packages.debian.org/apt-rdepends',
-             'gtk-options'  => 'http://manpages.ubuntu.com/manpages/jaunty/man7/gtk-options.7.html',
-             'xsetroot'     => 'http://www.x.org/archive/X11R7.5/doc/man/man1/xsetroot.1.html,
-             'leafnode'     => 'http://leafnode.sourceforge.net',
-             'lynx'         => 'http://lynx.isc.org/',
-             'feed2imap'    => 'http://home.gna.org/feed2imap',
-             # disguise from grep
-             'rss'.'2email' => 'http://rss'.'2email.infogami.com',
-             'rssdrop'      => 'http://search.cpan.org/dist/rssdrop/',
-             'toursst'      => 'http://packages.debian.org/etch/toursst',
-             'netrc'        => 'http://linux.die.net/man/5/netrc',
-            );
+my %table =
+  ('apt-file'     => 'http://packages.debian.org/apt-file',
+   'apt-cache'    => 'http://packages.debian.org/apt',
+   'apt-rdepends' => 'http://packages.debian.org/apt-rdepends',
+   'gtk-options'  => 'http://manpages.ubuntu.com/manpages/jaunty/man7/gtk-options.7.html',
+   'xsetroot'     => 'http://www.x.org/archive/X11R7.5/doc/man/man1/xsetroot.1.html',
+   'leafnode'     => 'http://leafnode.sourceforge.net',
+   'lynx'         => 'http://lynx.isc.org/',
+   'feed2imap'    => 'http://home.gna.org/feed2imap',
+   # disguise from grep
+   'rss'.'2email' => 'http://rss'.'2email.infogami.com',
+   'rssdrop'      => 'http://search.cpan.org/dist/rssdrop/',
+   'toursst'      => 'http://packages.debian.org/etch/toursst',
+   'netrc'        => 'http://linux.die.net/man/5/netrc',
+
+   # no online man pages apparently at http://man-db.nongnu.org/
+   'man'      => 'http://ftp.parisc-linux.org/cgi-bin/man/man2html?man+1'
+   'lexgrog'  => 'http://ftp.parisc-linux.org/cgi-bin/man/man2html?lexgrog+1',
+   'apropos'  => 'http://ftp.parisc-linux.org/cgi-bin/man/man2html?apropos+1'
+  );
 
 sub resolve_man_page_link {
   my ($self, $to, $frag) = @_;
@@ -78,10 +84,6 @@ sub resolve_pod_link_by_table {
     if ($to eq 'AptPkg') {
       $url = 'http://packages.debian.org/libapt-pkg-perl';
     }
-    if ($to eq 'apt-file') {
-      $url = APT_FILE_MANPAGE;
-    }
-
     if ($to =~ /^Glib::Ex::(SourceIds|SignalIds|FreezeNotify|TieProperties)/) {
       $url = "http://user42.tuxfamily.org/glib-ex-ob"."jectbits/$1.html";
     }

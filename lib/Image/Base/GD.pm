@@ -25,10 +25,10 @@ use GD ();  # no import of gdBrushed etc constants
 use base 'Image::Base';
 
 # uncomment this to run the ### lines
-#use Smart::Comments;
+#use Smart::Comments '###';
 
 use vars '$VERSION';
-$VERSION = 3;
+$VERSION = 4;
 
 sub new {
   my ($class, %params) = @_;
@@ -154,23 +154,23 @@ sub save {
 
 sub xy {
   my ($self, $x, $y, $colour) = @_;
-  ### Image-Base-GD xy: $x,$y,$colour
+  #### Image-Base-GD xy: $x,$y,$colour
   my $gd = $self->{'-gd'};
   if (@_ == 4) {
     $gd->setPixel ($x, $y, $self->colour_to_index($colour));
     ### setPixel: $self->colour_to_index($colour)
   } else {
     my $pixel = $gd->getPixel ($x, $y);
-    ### getPixel: $pixel
+    #### getPixel: $pixel
     if ($pixel == $gd->transparent) {
-      ### is transparent
+      #### is transparent
       return 'None';
     }
     if ($pixel >= 0x7F000000) {
-      ### pixel has fully-transparent alpha 0x7F
+      #### pixel has fully-transparent alpha 0x7F
       return 'None';
     }
-    ### rgb: $gd->rgb($pixel)
+    #### rgb: $gd->rgb($pixel)
     return sprintf ('#%02X%02X%02X', $gd->rgb ($pixel));
   }
 }
@@ -182,8 +182,20 @@ sub line {
 sub rectangle {
   my ($self, $x1, $y1, $x2, $y2, $colour, $fill) = @_;
   ### Image-Base-GD rectangle: @_
-  my $method = ($fill ? 'filledRectangle' : 'rectangle');
-  ### index: $self->colour_to_index($colour)
+  # ### index: $self->colour_to_index($colour)
+
+  # gd 2.39 draws dodgy sides on a $y1==$y2 unfilled rectangle, coming out
+  # like
+  #
+  #     *      *
+  #     ********
+  #     *      *
+  #
+  # As a workaround use just line() instead when $y1==$y2.
+  #
+  my $method = ($y1 == $y2 ? 'line'  # workaround
+                : $fill ? 'filledRectangle'
+                : 'rectangle');
   $self->{'-gd'}->$method ($x1,$y1,$x2,$y2, $self->colour_to_index($colour));
 }
 
@@ -209,6 +221,8 @@ sub ellipse {
       return;
     }
   }
+
+  ### use Image-Base
   shift->SUPER::ellipse(@_);
 }
 
@@ -385,6 +399,17 @@ Get or set an individual pixel.
 
 Currently colours returned are in hex "#RRGGBB" form, or "None" for a fully
 transparent pixel.  Partly transparent pixels are returned as a colour.
+
+=item C<$image-E<gt>rectangle ($x1,$y1, $x2,$y2, $colour, $fill)>
+
+Draw a rectangle with corners at C<$x1>,C<$y1> and C<$x2>,C<$y2>.  If
+C<$fill> is true then it's filled, otherwise just the outline.
+
+GD library 2.0.36 seems to have a gremlin when drawing 1-pixel high C<$y1 ==
+$y2> unfilled rectangles where it adds 3-pixel high sides to the result.
+C<Image::Base::GD> has a workaround to avoid that.  The intention isn't to
+second guess GD, but this fix is easy to apply and makes the output
+consistent with other C<Image::Base> modules.
 
 =item C<$image-E<gt>ellipse ($x1,$y1, $x2,$y2, $colour)>
 

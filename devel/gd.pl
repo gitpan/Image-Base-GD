@@ -32,7 +32,10 @@ use Smart::Comments;
   # $image->ellipse (0,0, 11,10, 'white');
 
   my $gd = $image->get('-gd');
-  $gd->ellipse (5,5, 6,6, $image->colour_to_index('white'));
+  $gd->setThickness(1);
+
+  # $gd->ellipse (5,5, 6,6, $image->colour_to_index('white'));
+  $gd->rectangle (10,12, 14,12, $image->colour_to_index('white'));
 
   $image->save('/tmp/x.png');
   system ("convert  -monochrome /tmp/x.png /tmp/x.xpm && cat /tmp/x.xpm");
