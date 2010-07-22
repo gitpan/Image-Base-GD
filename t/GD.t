@@ -17,7 +17,7 @@
 # You should have received a copy of the GNU General Public License along
 # with Image-Base-GD.  If not, see <http://www.gnu.org/licenses/>.
 
-use 5.010;
+use 5.004;
 use strict;
 use warnings;
 use Test::More tests => 1104;
@@ -35,7 +35,7 @@ sub my_bounding_box {
 
   my @bad;
   foreach my $y ($y1-1, $y2+1) {
-    next if $y < 0 || $y >= $height;;
+    next if $y < 0 || $y >= $height;
     foreach my $x ($x1-1 .. $x2-1) {
       my $got = $image->xy($x,$y);
       if ($got ne $black) {
@@ -44,7 +44,7 @@ sub my_bounding_box {
     }
   }
   foreach my $x ($x1-1, $x2+1) {
-    next if $x < 0 || $x >= $width;;
+    next if $x < 0 || $x >= $width;
     foreach my $y ($y1 .. $y2) {
       my $got = $image->xy($x,$y);
       if ($got ne $black) {
@@ -55,7 +55,7 @@ sub my_bounding_box {
 
   my $found_set;
  Y_SET: foreach my $y ($y1, $y2) {
-    next if $y < 0 || $y >= $height;;
+    next if $y < 0 || $y >= $height;
     foreach my $x ($x1 .. $x2) {
       my $got = $image->xy($x,$y);
       if ($got ne $black) {
@@ -65,7 +65,7 @@ sub my_bounding_box {
     }
   }
  X_SET: foreach my $x ($x1, $x2) {
-    next if $x < 0 || $x >= $width;;
+    next if $x < 0 || $x >= $width;
     foreach my $y ($y1+1 .. $y2-1) {
       next if $y < $y1 || $y > $y2;
       my $got = $image->xy($x,$y);
@@ -127,7 +127,7 @@ sub my_bounding_box_and_sides {
 # VERSION
 
 {
-  my $want_version = 4;
+  my $want_version = 5;
   is ($Image::Base::GD::VERSION, $want_version, 'VERSION variable');
   is (Image::Base::GD->VERSION,  $want_version, 'VERSION class method');
 
@@ -176,7 +176,7 @@ sub my_bounding_box_and_sides {
                                     -height => 7,
                                     -zlib_compression => 1);
   is ($image->get('-zlib_compression'),  1, 'orig -zlib_compression, before');
-  my $i2 = $image->new (-zlib_compression => 2);;
+  my $i2 = $image->new (-zlib_compression => 2);
   is ($image->get('-zlib_compression'),  1, 'orig -zlib_compression');
   is ($i2->get('-zlib_compression'),  2, 'clone -zlib_compression');
 }

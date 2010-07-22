@@ -26,13 +26,18 @@ use Test::More;
 # uncomment this to run the ### lines
 #use Smart::Comments;
 
-my %mung_colour = ('#000000' => 'black',
-                   '#000000000000' => 'black',
-                   '#FFFFFF' => 'white',
-                   '#FFFFFFFFFFFF' => 'white');
+our $white = 'white';
+our $black = 'black';
+
 sub mung_colour {
   my ($colour) = @_;
-  return $mung_colour{$colour} || $colour;
+  if ($colour eq '#000000' || $colour eq '#000000000000') {
+    return $black;
+  }
+  if ($colour eq '#FFFFFF' || $colour eq '#FFFFFFFFFFFF') {
+    return $white;
+  }
+  return $colour;
 }
 
 sub dump_image {
@@ -44,7 +49,7 @@ sub dump_image {
     my $str = '';
     foreach my $x (0 .. $width-1) {
       my $colour = mung_colour($image->xy($x,$y));
-      if ($colour eq 'black') {
+      if ($colour eq $black) {
         $str .= '_';
       } else {
         $str .= substr ($colour, 0,1);
@@ -169,38 +174,67 @@ sub check_line {
     my ($x1,$y1, $x2,$y2) = @$elem;
 
     my $name = "line $x1,$y1 $x2,$y2";
-    $image->rectangle (0,0, $width-1,$height-1, 'black', 1);
-    $image->line ($x1,$y1, $x2,$y2, 'white');
+    $image->rectangle (0,0, $width-1,$height-1, $black, 1);
+    $image->line ($x1,$y1, $x2,$y2, $white);
 
-    is (mung_colour($image->xy($x1,$y1)), 'white', "corner of $name");
-    is_rect ($image, $x1-1,$x2+1, $y1-1,$y2+1, 'black', $name);
+    is (mung_colour($image->xy($x1,$y1)), $white, "corner of $name");
+    is_rect ($image, $x1-1,$x2+1, $y1-1,$y2+1, $black, $name);
   }
+}
+
+sub rect_using_Other {
+  my ($image, $x1, $y1, $x2, $y2, $colour, $fill) = @_;
+  $image->Image_Base_Other_rectangles ($colour, $fill, $x1, $y1, $x2, $y2);
 }
 
 sub check_rectangle {
   my ($image) = @_;
   my ($width, $height) = $image->get('-width','-height');
 
-  foreach my $elem (@sizes) {
-    my ($x1,$y1, $x2,$y2) = @$elem;
+  foreach my $method ('rectangle',
+                      ($image->can('Image_Base_Other_rectangles')
+                       ? (__PACKAGE__.'::rect_using_Other')
+                       : ())) {
 
-    {
-      my $name = "rect unfilled $x1,$y1, $x2,$y2";
-      $image->rectangle (0,0, $width-1,$height-1, 'black', 1);
-      $image->rectangle ($x1,$y1, $x2,$y2, 'white', 0);
-      my $bad = (is_rect ($image, $x1,$y1, $x2,$y2, 'white', $name)
-                 + is_rect ($image, $x1-1,$y1-1, $x2+1,$y2+1, 'black', $name)
-                 # interior
-                 + is_rect ($image, $x1+1,$y1+1, $x2-1,$y2-1, 'black', $name));
-      if ($bad) { dump_image($image); }
-    }
-    {
-      my $name = "rect filled $x1,$y1, $x2,$y2";
-      $image->rectangle (0,0, $width-1,$height-1, 'black', 1);
-      $image->rectangle ($x1,$y1, $x2,$y2, 'white', 1);
-      my $bad = (is_filled_rect ($image, $x1,$y1, $x2,$y2, 'white', $name)
-                 + is_rect ($image, $x1-1,$y1-1, $x2+1,$y2+1, 'black', $name));
-      if ($bad) { dump_image($image); }
+    foreach my $elem (@sizes) {
+      my ($x1,$y1, $x2,$y2) = @$elem;
+
+      {
+        my $name = "$method unfilled $x1,$y1, $x2,$y2";
+        my $fill = undef;
+        $image->rectangle (0,0, $width-1,$height-1, $black, 1);
+
+        my @args = ($x1,$y1, $x2,$y2, $white, $fill);
+        if ($method eq 'Image_Base_Other_rectangles') {
+          unshift @args, splice @args, -2, 2;
+        }
+        $image->$method (@args);
+
+        my $bad
+          = (is_rect ($image, $x1,$y1, $x2,$y2, $white, $name)
+             # outside
+             + is_rect ($image, $x1-1,$y1-1, $x2+1,$y2+1, $black, $name)
+             # inside
+             + is_rect ($image, $x1+1,$y1+1, $x2-1,$y2-1, $black, $name));
+        if ($bad) { dump_image($image); }
+      }
+      {
+        my $name = "$method filled $x1,$y1, $x2,$y2";
+        my $fill = 123;
+        $image->rectangle (0,0, $width-1,$height-1, $black, 1);
+
+        my @args = ($x1,$y1, $x2,$y2, $white, $fill);
+        if ($method eq 'Image_Base_Other_rectangles') {
+          unshift @args, splice @args, -2, 2;
+        }
+        $image->$method (@args);
+
+        my $bad
+          = (is_filled_rect ($image, $x1,$y1, $x2,$y2, $white, $name)
+             # outside
+             + is_rect ($image, $x1-1,$y1-1, $x2+1,$y2+1, $black, $name));
+        if ($bad) { dump_image($image); }
+      }
     }
   }
 }
@@ -225,14 +259,14 @@ sub check_ellipse {
       next if $name eq 'ellipse 3,3, 13,3';  # dodgy
     }
 
-    $image->rectangle (0,0, $width-1,$height-1, 'black', 1);
-    $image->ellipse ($x1,$y1, $x2,$y2, 'white');
+    $image->rectangle (0,0, $width-1,$height-1, $black, 1);
+    $image->ellipse ($x1,$y1, $x2,$y2, $white);
 
-    my $bad = (some_hline ($image, $x1,$x2, $y1, 'white', $name)
-               + some_hline ($image, $x1,$x2, $y2, 'white', $name)
-               + some_vline ($image, $x1, $y1,$y2, 'white', $name)
-               + some_vline ($image, $x2, $y1,$y2, 'white', $name)
-               + is_rect ($image, $x1-1,$y1-1, $x2+1,$y2+1, 'black', $name));
+    my $bad = (some_hline ($image, $x1,$x2, $y1, $white, $name)
+               + some_hline ($image, $x1,$x2, $y2, $white, $name)
+               + some_vline ($image, $x1, $y1,$y2, $white, $name)
+               + some_vline ($image, $x2, $y1,$y2, $white, $name)
+               + is_rect ($image, $x1-1,$y1-1, $x2+1,$y2+1, $black, $name));
     if ($bad) { dump_image($image); }
   }
 }

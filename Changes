@@ -16,6 +16,9 @@ You can get a copy of the GNU General Public License online at
 <http://www.gnu.org/licenses/>.
 
 
+Version 5, July 2010
+    - lower a couple of stray "use 5.010"s
+
 Version 4, July 2010
     - workaround for apparent GD bug where an unfilled y1==y2
       rectangle gets sides y-1 to y+1, outside the x1,y1 x2,y2 area

@@ -17,7 +17,7 @@
 # You should have received a copy of the GNU General Public License along
 # with Image-Base-GD.  If not, see <http://www.gnu.org/licenses/>.
 
-use 5.010;
+use 5.004;
 use strict;
 use warnings;
 use ExtUtils::MakeMaker;
@@ -32,21 +32,19 @@ MyMakeMakerExtras::WriteMakefile
    LICENSE      => 'gpl',
    SIGN         => 1,
    PREREQ_PM    => {
+                    'warnings' => 0,
                     'Image::Base' => 0,
                     'GD' => 0,
+
+                    # for testing
+                    'Test::More' => 0,
+                    'List::Util' => 0, 
                    },
    MIN_PERL_VERSION => '5.004',
 
    META_MERGE
    => { resources
         => { homepage => 'http://user42.tuxfamily.org/image-base-gd/index.html',
-           },
-        optional_features
-        => { maximum_tests
-             => { description => 'Have "make test" do as much as possible.',
-                  requires => { 'Test::NoWarnings' => 0,
-                              },
-                },
            },
       },
   );

@@ -22,13 +22,15 @@ use strict;
 use warnings;
 use Carp;
 use GD ();  # no import of gdBrushed etc constants
-use base 'Image::Base';
+use vars '$VERSION', '@ISA';
+
+use Image::Base;
+@ISA = ('Image::Base');
+
+$VERSION = 5;
 
 # uncomment this to run the ### lines
 #use Smart::Comments '###';
-
-use vars '$VERSION';
-$VERSION = 4;
 
 sub new {
   my ($class, %params) = @_;
@@ -328,7 +330,7 @@ sub _colour_to_rgb255 {
 1;
 __END__
 
-=for stopwords PNG GD filename undef Ryde Zlib
+=for stopwords PNG GD filename undef Ryde Zlib Zlib's truecolor RGBA
 
 =head1 NAME
 
@@ -357,7 +359,7 @@ C<Image::Base::GD> is a subclass of C<Image::Base>,
 C<Image::Base::GD> extends C<Image::Base> to create or update PNG format
 image files using the C<GD> module and library (version 2 or higher).
 
-Colour names for drawing are taken from the C<GD::Simple> C<color_table>,
+Colour names for drawing are taken from the C<GD::Simple> C<color_table()>,
 plus hex "#RRGGBB" or "#RRRRGGGGBBBB".  Special colour "None" means
 transparent.  Colours are allocated when first used.  4-digit
 "#RRRRGGGGBBBB" forms are truncated to the high 2 digits since GD works in
@@ -405,8 +407,8 @@ transparent pixel.  Partly transparent pixels are returned as a colour.
 Draw a rectangle with corners at C<$x1>,C<$y1> and C<$x2>,C<$y2>.  If
 C<$fill> is true then it's filled, otherwise just the outline.
 
-GD library 2.0.36 seems to have a gremlin when drawing 1-pixel high C<$y1 ==
-$y2> unfilled rectangles where it adds 3-pixel high sides to the result.
+GD library 2.0.36 has a bug when drawing 1-pixel high C<$y1 == $y2> unfilled
+rectangles where it adds 3-pixel high sides to the result.
 C<Image::Base::GD> has a workaround to avoid that.  The intention isn't to
 second guess GD, but this fix is easy to apply and makes the output
 consistent with other C<Image::Base> modules.
@@ -416,10 +418,10 @@ consistent with other C<Image::Base> modules.
 Draw an ellipse within the rectangle bounded by C<$x1>,C<$y1> and
 C<$x2>,C<$y2>.
 
-In the current implementation ellipses with an odd sides (when C<$x2-$x1+1>
-and C<$y2-$y1+1> are both odd numbers) are drawn with GD and the rest go to
-C<Image::Base>, because GD doesn't seem to draw even widths very well.  The
-different handling is a bit inconsistent though.
+In the current implementation ellipses with odd length sides (when
+C<$x2-$x1+1> and C<$y2-$y1+1> are both odd numbers) are drawn with GD and
+the rest go to C<Image::Base> since GD doesn't seem to draw even widths very
+well.  This different handling is a bit inconsistent though.
 
 =item C<$image-E<gt>add_colours ($name, $name, ...)>
 
@@ -433,7 +435,7 @@ so C<add_colours> in not needed, but it can be used to initialize the
 palette with particular desired colours.
 
 For a truecolor GD C<add_colours> does nothing since in that case each pixel
-is an RGBA value rather than an index into a palette.
+has RGBA component values, rather than an index into a palette.
 
 =back
 
@@ -473,14 +475,15 @@ C<Image::Base::GD> turns off blending for GD objects it creates, but
 currently if you pass in a C<-gd> then you must set the blending yourself if
 you're going to use None.  Is that the best way?  The ideal might be to save
 and restore while drawing None, but there's no apparent way to read the
-blending setting out of a GD to know what to restore.  Alternately maybe
-turn blending off and leave it off on first drawing any None.
+blending setting out of a GD to later restore.  Alternately maybe turn
+blending off and leave it off on first drawing any None.
 
 =head1 SEE ALSO
 
 L<Image::Base>,
-L<Image::Base::PNGwriter>,
 L<GD>,
+L<GD::Simple>,
+L<Image::Base::PNGwriter>,
 L<Image::Xpm>
 
 =head1 HOME PAGE
