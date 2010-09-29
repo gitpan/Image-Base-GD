@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/perl -w
 
 # Copyright 2010 Kevin Ryde
 
@@ -27,6 +27,7 @@ use MyTestHelpers;
 BEGIN { MyTestHelpers::nowarnings() }
 
 require Image::Base::GD;
+diag "Image::Base version ", Image::Base->VERSION;
 
 
 sub my_bounding_box {
@@ -127,7 +128,7 @@ sub my_bounding_box_and_sides {
 # VERSION
 
 {
-  my $want_version = 5;
+  my $want_version = 6;
   is ($Image::Base::GD::VERSION, $want_version, 'VERSION variable');
   is (Image::Base::GD->VERSION,  $want_version, 'VERSION class method');
 

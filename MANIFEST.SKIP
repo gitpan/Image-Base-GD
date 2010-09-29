@@ -58,6 +58,9 @@
 # msdos compiler stuff using ms c
 \.pdb$
 
+# built - recent Module::Build nonsense
+^MYMETA\.yml$
+
 # built - cdbs and debhelper
 ^debian/stamp-
 ^debian/.*\.log$
@@ -69,6 +72,7 @@
 ^[^/]+\.c$
 # built .o compiled and .bs from .xs
 \.o$
+\.obj$
 \.bs$
 #
 #(^|/)[A-Z][A-Za-z0-9_]*\.c$

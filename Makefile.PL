@@ -26,7 +26,7 @@ use MyMakeMakerExtras;
 
 MyMakeMakerExtras::WriteMakefile
   (NAME         => 'Image-Base-GD',
-   ABSTRACT     => 'Image::Base PNG using GD.',
+   ABSTRACT     => 'Image::Base on PNG files using GD.',
    VERSION_FROM => 'lib/Image/Base/GD.pm',
    AUTHOR       => 'Kevin Ryde <user42@zip.com.au>',
    LICENSE      => 'gpl',

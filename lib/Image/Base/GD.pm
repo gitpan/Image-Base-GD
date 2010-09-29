@@ -27,7 +27,7 @@ use vars '$VERSION', '@ISA';
 use Image::Base;
 @ISA = ('Image::Base');
 
-$VERSION = 5;
+$VERSION = 6;
 
 # uncomment this to run the ### lines
 #use Smart::Comments '###';
@@ -358,6 +358,10 @@ C<Image::Base::GD> is a subclass of C<Image::Base>,
 
 C<Image::Base::GD> extends C<Image::Base> to create or update PNG format
 image files using the C<GD> module and library (version 2 or higher).
+
+The native GD drawing has lots more features, but this module is an easy way
+to point C<Image::Base> style code at a GD and is a good way to get PNG out
+of some C<Image::Base> code.
 
 Colour names for drawing are taken from the C<GD::Simple> C<color_table()>,
 plus hex "#RRGGBB" or "#RRRRGGGGBBBB".  Special colour "None" means
