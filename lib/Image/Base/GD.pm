@@ -21,13 +21,17 @@ use 5.004;
 use strict;
 use warnings;
 use Carp;
-use GD ();  # no import of gdBrushed etc constants
+
+# version 2.45 for GD::Group inst fix so GD::Simple works
+# no import of gdBrushed etc constants
+use GD 2.45 ();
+
 use vars '$VERSION', '@ISA';
 
-use Image::Base;
+use Image::Base 1.09; # version 1.09 for ellipse() fixes chaining up to that
 @ISA = ('Image::Base');
 
-$VERSION = 6;
+$VERSION = 7;
 
 # uncomment this to run the ### lines
 #use Smart::Comments '###';

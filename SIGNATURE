@@ -1,5 +1,5 @@
 This file contains message digests of all files listed in MANIFEST,
-signed via the Module::Signature module, version 0.63.
+signed via the Module::Signature module, version 0.66.
 
 To verify the content in this distribution, first make sure you have
 Module::Signature installed, then type:
@@ -15,14 +15,14 @@ not run its Makefile.PL or Build.PL.
 Hash: SHA1
 
 SHA1 842745cb706f8f2126506f544492f7a80dbe29b3 COPYING
-SHA1 1ec0b6fcbcbc9a69bdb9b68a88b8e7739bb27d4b Changes
+SHA1 073a9234f32f0dcb68d59074b7f896257a86ef29 Changes
 SHA1 0519d865805dca220b744f0027478f934770e071 MANIFEST
 SHA1 e6e7c2904ea5d300c0ddf70fc5a80f5005229aa9 MANIFEST.SKIP
-SHA1 554c3478921c07a38675a93efe62d381ab1ff202 META.yml
-SHA1 48ded7574ec8f3eac75249ef7eccb8d262099ce8 Makefile.PL
-SHA1 37f6ffbc7e44d62f51e51deabeb970a72e07b8e9 debian/changelog
+SHA1 2fce641ddef8e5edd742421973515de8b687a5db META.yml
+SHA1 a295f4c5390596e19d247209bd44f18624b3dd7c Makefile.PL
+SHA1 e1ff53161194ff98d87270c5b02853a3b1c28202 debian/changelog
 SHA1 ac3478d69a3c81fa62e60f5c3696165a4e5e6ac4 debian/compat
-SHA1 58d16d8365286b93ae78368b01f8819826803b91 debian/control
+SHA1 754f102f4dc60a6ac9c68ebf6052cc18c726d023 debian/control
 SHA1 3b261ac679a45cb62151b48b6cd94093c0023f51 debian/copyright
 SHA1 a9a2e9df45d691a9c8767baa95361f64c78b8c8d debian/rules
 SHA1 61652cd1568dcf2614df833eba241755eee34e89 debian/source/format
@@ -34,8 +34,8 @@ SHA1 738ced27b70bef4af9e3b582e581346b0cf84c3a devel/run.pl
 SHA1 e34b5916a81e7ff7d5da5ba0e7986698c098b86d devel/unused.pl
 SHA1 3cf3345a9177dbe362dfc8fbf192272f4a611ca8 inc/MyMakeMakerExtras.pm
 SHA1 692a1ddc2ca6b98cac7b48ea40bc1ac1509e8ed9 inc/my_pod2html
-SHA1 78ca7b354a2ecf748e01f06b08c9de284ee40078 lib/Image/Base/GD.pm
-SHA1 2551a17988dfaa0b729870921d655fd42bcdfb9c t/GD.t
+SHA1 6e3f7a8ab611836e04e5944f4c75111638ef8406 lib/Image/Base/GD.pm
+SHA1 7f3a73ee055237970ff1e7cc2a8cb04b849e49d9 t/GD.t
 SHA1 5e5680b471811244fe93571efc23e7b6089cac3b t/MyTestHelpers.pm
 SHA1 f5104c484721657b41ae06f21a1dabbee5877f5d t/MyTestImageBase.pm
 SHA1 9127f78a0dfa04976acbb979dd7862ef59a74c58 xt/0-META-read.t
@@ -46,7 +46,7 @@ SHA1 fb517c2fae5ddac559318bf6a224949115ea3129 xt/0-Test-YAML-Meta.t
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.4.10 (GNU/Linux)
 
-iD8DBQFMo7E+LFMCIV9q3ToRAo9RAKCDSSNy4Z6NvL1MKdwxZOE0zOJnEgCdETeH
-tHjBWnT7GyYOyMjo21QcU70=
-=k5ac
+iD8DBQFMy0RcLFMCIV9q3ToRAoDaAJ0QkTCgbXUx1sg1aqsU8hpumSMcfwCffX40
+6eENEHfTeacVf4AVA2RKGaQ=
+=/aE8
 -----END PGP SIGNATURE-----

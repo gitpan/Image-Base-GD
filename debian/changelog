@@ -1,5 +1,5 @@
-libimage-base-gd-perl (6-1) unstable; urgency=low
+libimage-base-gd-perl (7-1) unstable; urgency=low
 
   * Packaged version.
 
- -- Kevin Ryde <user42@zip.com.au>  Thu, 30 Sep 2010 07:33:18 +1000
+ -- Kevin Ryde <user42@zip.com.au>  Sat, 30 Oct 2010 08:40:32 +1100

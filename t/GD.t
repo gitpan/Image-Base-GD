@@ -20,7 +20,7 @@
 use 5.004;
 use strict;
 use warnings;
-use Test::More tests => 1104;
+use Test::More tests => 1192;
 
 use lib 't';
 use MyTestHelpers;
@@ -128,7 +128,7 @@ sub my_bounding_box_and_sides {
 # VERSION
 
 {
-  my $want_version = 6;
+  my $want_version = 7;
   is ($Image::Base::GD::VERSION, $want_version, 'VERSION variable');
   is (Image::Base::GD->VERSION,  $want_version, 'VERSION class method');
 
@@ -446,26 +446,11 @@ foreach my $truecolor (1,0) {
 
 #------------------------------------------------------------------------------
 
-sub base_ellipse_func {
-  my ($x1,$y1, $x2,$y2) = @_;
-  diag "ellipse $x1,$y1 $x2,$y2 check base";
-  my $xw = $x2 - $x1;
-  if (! ($xw & 1)) {
-    my $yw = $y2 - $y1;
-    if (! ($yw & 1)) {
-      diag "is GD";
-      return 0;
-    }
-  }
-  diag "is base";
-  return 1;
-}
 {
   require MyTestImageBase;
   my $image = Image::Base::GD->new (-width => 21,
                                     -height => 10);
-  MyTestImageBase::check_image ($image,
-                                base_ellipse_func => \&base_ellipse_func);
+  MyTestImageBase::check_image ($image);
 }
 
 exit 0;

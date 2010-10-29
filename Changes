@@ -16,6 +16,10 @@ You can get a copy of the GNU General Public License online at
 <http://www.gnu.org/licenses/>.
 
 
+Version 7, October 2010
+    - use Image:Base 1.09 for ellipse() fixes to chain up to
+    - ask for GD 2.45 for GD::Simple / GD::Group fix
+
 Version 6, September 2010
     - test manifest only as an author test
 

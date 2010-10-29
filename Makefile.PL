@@ -33,8 +33,9 @@ MyMakeMakerExtras::WriteMakefile
    SIGN         => 1,
    PREREQ_PM    => {
                     'warnings' => 0,
-                    'Image::Base' => 0,
-                    'GD' => 0,
+                    'Image::Base' => '1.09',  # for ellipse() fixes
+                    'GD'         => '2.45', # 2.45 for GD::Group inst fix
+                    'GD::Simple' => 0,      # no version num in 2.45
 
                     # for testing
                     'Test::More' => 0,
