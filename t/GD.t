@@ -20,7 +20,7 @@
 use 5.004;
 use strict;
 use warnings;
-use Test::More tests => 1192;
+use Test::More tests => 1423;
 
 use lib 't';
 use MyTestHelpers;
@@ -128,7 +128,7 @@ sub my_bounding_box_and_sides {
 # VERSION
 
 {
-  my $want_version = 7;
+  my $want_version = 8;
   is ($Image::Base::GD::VERSION, $want_version, 'VERSION variable');
   is (Image::Base::GD->VERSION,  $want_version, 'VERSION class method');
 
@@ -374,6 +374,19 @@ foreach my $truecolor (1,0) {
   is ($image->xy (6,4), '#000000');
   is ($image->xy (6,5), '#000000');
   is ($image->xy (6,6), '#000000');
+}
+{
+  my $image = Image::Base::GD->new (-width => 20,
+                                    -height => 10);
+  # unfilled 3x3
+  $image->rectangle (0,0,19,9, '#000000');
+  $image->ellipse (5,5, 7,7, '#FFFFFF');
+  is ($image->xy (6,6), '#000000');
+
+  # filled 3x3
+  $image->rectangle (0,0,19,9, '#000000');
+  $image->ellipse (5,5, 7,7, '#FFFFFF', 1);
+  is ($image->xy (6,6), '#FFFFFF');
 }
 
 {

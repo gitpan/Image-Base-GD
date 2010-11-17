@@ -16,6 +16,9 @@ You can get a copy of the GNU General Public License online at
 <http://www.gnu.org/licenses/>.
 
 
+Version 8, November 2010
+    - ellipse() $fill parameter
+
 Version 7, October 2010
     - use Image:Base 1.09 for ellipse() fixes to chain up to
     - ask for GD 2.45 for GD::Simple / GD::Group fix

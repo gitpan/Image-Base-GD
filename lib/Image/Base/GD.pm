@@ -28,10 +28,10 @@ use GD 2.45 ();
 
 use vars '$VERSION', '@ISA';
 
-use Image::Base 1.09; # version 1.09 for ellipse() fixes chaining up to that
+use Image::Base 1.12; # version 1.12 for ellipse() $fill
 @ISA = ('Image::Base');
 
-$VERSION = 7;
+$VERSION = 8;
 
 # uncomment this to run the ### lines
 #use Smart::Comments '###';
@@ -206,8 +206,8 @@ sub rectangle {
 }
 
 sub ellipse {
-  my ($self, $x1, $y1, $x2, $y2, $colour) = @_;
-  ### Image-GD ellipse: "$x1, $y1, $x2, $y2, $colour"
+  my ($self, $x1, $y1, $x2, $y2, $colour, $fill) = @_;
+  ### Image-GD ellipse: "$x1, $y1, $x2, $y2, $colour, ".($fill?1:0)
 
   # If width $xw or height $yw is an odd number then GD draws the extra
   # pixel on the higher value side, ie. the centre is the rounded-down
@@ -221,7 +221,8 @@ sub ellipse {
       ### y centre: $y1 + $yw/2
       ### $xw+1
       ### $yw+1
-      $self->{'-gd'}->ellipse ($x1 + $xw/2, $y1 + $yw/2,
+      my $method = ($fill ? 'filledEllipse' : 'ellipse');
+      $self->{'-gd'}->$method ($x1 + $xw/2, $y1 + $yw/2,
                                $xw+1, $yw+1,
                                $self->colour_to_index($colour));
       return;
@@ -423,13 +424,15 @@ consistent with other C<Image::Base> modules.
 
 =item C<$image-E<gt>ellipse ($x1,$y1, $x2,$y2, $colour)>
 
-Draw an ellipse within the rectangle bounded by C<$x1>,C<$y1> and
-C<$x2>,C<$y2>.
+=item C<$image-E<gt>ellipse ($x1,$y1, $x2,$y2, $colour, $fill)>
 
-In the current implementation ellipses with odd length sides (when
-C<$x2-$x1+1> and C<$y2-$y1+1> are both odd numbers) are drawn with GD and
-the rest go to C<Image::Base> since GD doesn't seem to draw even widths very
-well.  This different handling is a bit inconsistent though.
+Draw an ellipse within the rectangle with corners C<$x1>,C<$y1> and
+C<$x2>,C<$y2>.  Optional C<$fill> true means a filled ellipse.
+
+In the current implementation ellipses with odd length sides (meaning
+C<$x2-$x1+1> and C<$y2-$y1+1> both odd numbers) are drawn with GD and the
+rest go to C<Image::Base> because GD circa 2.0.36 doesn't seem to draw even
+widths very well.  This different handling is a bit inconsistent.
 
 =item C<$image-E<gt>add_colours ($name, $name, ...)>
 
