@@ -31,7 +31,7 @@ use vars '$VERSION', '@ISA';
 use Image::Base 1.12; # version 1.12 for ellipse() $fill
 @ISA = ('Image::Base');
 
-$VERSION = 8;
+$VERSION = 9;
 
 # uncomment this to run the ### lines
 #use Smart::Comments '###';
@@ -151,7 +151,7 @@ sub save {
 
   # or maybe File::Slurp::write_file($filename,{binmode=>':raw'})
   my $fh;
-  (open $fh, ">$filename"
+  (open $fh, "> $filename"
    and binmode($fh)
    and print $fh $data
    and close $fh)
@@ -190,17 +190,16 @@ sub rectangle {
   ### Image-Base-GD rectangle: @_
   # ### index: $self->colour_to_index($colour)
 
-  # gd 2.39 draws dodgy sides on a $y1==$y2 unfilled rectangle, coming out
-  # like
+  # gd 2.39 draws a $y1==$y2 unfilled rectangle with dodgy sides on like
   #
   #     *      *
   #     ********
   #     *      *
   #
-  # As a workaround use just line() instead when $y1==$y2.
+  # As a workaround send that to filledRectangle() instead.
   #
-  my $method = ($y1 == $y2 ? 'line'  # workaround
-                : $fill ? 'filledRectangle'
+  my $method = ($fill || $y1 == $y2
+                ? 'filledRectangle'
                 : 'rectangle');
   $self->{'-gd'}->$method ($x1,$y1,$x2,$y2, $self->colour_to_index($colour));
 }
@@ -213,15 +212,21 @@ sub ellipse {
   # pixel on the higher value side, ie. the centre is the rounded-down
   # position.  Hope that can be relied on ...
   #
+  # some versions of libgd prior to 2.0.36 seem to drawn nothing for
+  # filledEllipse() on an x1==x2 y1==y2 single-pixel ellipse.  Try sending 1
+  # or 2 pixel wide or high to the base ellipse() and from there to
+  # filledRectangle() instead.
+  #
   my $xw = $x2 - $x1;
-  if (! ($xw & 1)) {
+  if ($xw > 1 && ! ($xw & 1)) {
     my $yw = $y2 - $y1;
-    if (! ($yw & 1)) {
+    if ($yw > 1 && ! ($yw & 1)) {
       ### x centre: $x1 + $xw/2
       ### y centre: $y1 + $yw/2
       ### $xw+1
       ### $yw+1
-      my $method = ($fill ? 'filledEllipse' : 'ellipse');
+      my $method = ($fill ? 'filledEllipse'
+                    : 'ellipse');
       $self->{'-gd'}->$method ($x1 + $xw/2, $y1 + $yw/2,
                                $xw+1, $yw+1,
                                $self->colour_to_index($colour));

@@ -16,6 +16,9 @@ You can get a copy of the GNU General Public License online at
 <http://www.gnu.org/licenses/>.
 
 
+Version 9, November 2010
+    - help 1x1 filled ellipse on past libgd
+
 Version 8, November 2010
     - ellipse() $fill parameter
 

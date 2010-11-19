@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:               Image-Base-GD
-version:            8
+version:            9
 abstract:           Image::Base on PNG files using GD.
 author:
     - Kevin Ryde <user42@zip.com.au>
