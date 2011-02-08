@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:               Image-Base-GD
-version:            9
+version:            10
 abstract:           Image::Base on PNG files using GD.
 author:
     - Kevin Ryde <user42@zip.com.au>
@@ -15,9 +15,8 @@ requires:
     GD::Simple:   0
     Image::Base:  1.12
     List::Util:   0
-    perl:         5.004
+    perl:         5.006
     Test::More:   0
-    warnings:     0
 resources:
     homepage:  http://user42.tuxfamily.org/image-base-gd/index.html
     license:   http://www.gnu.org/licenses/gpl.html
@@ -39,7 +38,6 @@ optional_features:
     maximum_tests:
         description:  Have "make test" do as much as possible.
         requires:
-            File::Spec:          0
             Parse::CPAN::Meta:   0
             Test::DistManifest:  0
             Test::Pod:           1.00

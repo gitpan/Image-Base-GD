@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-# Copyright 2010 Kevin Ryde
+# Copyright 2010, 2011 Kevin Ryde
 
 # This file is part of Image-Base-GD.
 #
@@ -17,7 +17,7 @@
 # You should have received a copy of the GNU General Public License along
 # with Image-Base-GD.  If not, see <http://www.gnu.org/licenses/>.
 
-use 5.004;
+use 5.006;
 use strict;
 use warnings;
 use Test::More tests => 1624;
@@ -128,22 +128,26 @@ sub my_bounding_box_and_sides {
 # VERSION
 
 {
-  my $want_version = 9;
+  my $want_version = 10;
   is ($Image::Base::GD::VERSION, $want_version, 'VERSION variable');
   is (Image::Base::GD->VERSION,  $want_version, 'VERSION class method');
 
-  ok (eval { Image::Base::GD->VERSION($want_version); 1 },
+  is (eval { Image::Base::GD->VERSION($want_version); 1 },
+      1,
       "VERSION class check $want_version");
   my $check_version = $want_version + 1000;
-  ok (! eval { Image::Base::GD->VERSION($check_version); 1 },
+  is (! eval { Image::Base::GD->VERSION($check_version); 1 },
+      1,
       "VERSION class check $check_version");
 
   my $image = Image::Base::GD->new (-gd => 'dummy');
   is ($image->VERSION,  $want_version, 'VERSION object method');
 
-  ok (eval { $image->VERSION($want_version); 1 },
+  is (eval { $image->VERSION($want_version); 1 },
+      1,
       "VERSION object check $want_version");
-  ok (! eval { $image->VERSION($check_version); 1 },
+  is (! eval { $image->VERSION($check_version); 1 },
+      1,
       "VERSION object check $check_version");
 }
 
@@ -157,19 +161,29 @@ sub my_bounding_box_and_sides {
   is ($image->get('-zlib_compression'), -1);
   is ($image->get('-width'), 6);
   is ($image->get('-height'), 7);
-  isa_ok ($image, 'Image::Base');
-  isa_ok ($image, 'Image::Base::GD');
+  is (defined $image && $image->isa('Image::Base') && 1,
+      1,
+      'isa Image::Base');
+  is (defined $image && $image->isa('Image::Base::GD') && 1,
+      1,
+      'isa Image::Base::GD');
 }
 
 {
   my $image = Image::Base::GD->new (-width => 6,
                                     -height => 7);
   my $i2 = $image->new;
-  isa_ok ($image, 'Image::Base',     'copy object');
-  isa_ok ($image, 'Image::Base::GD', 'copy object');
+  is (defined $i2 && $i2->isa('Image::Base') && 1,
+      1,
+      'isa Image::Base');
+  is (defined $i2 && $i2->isa('Image::Base::GD') && 1,
+      1,
+      'isa Image::Base::GD');
   is ($i2->get('-width'),  6, 'copy object -width');
   is ($i2->get('-height'), 7, 'copy object -height');
-  isnt ($i2->get('-gd'), $image->get('-gd'), 'copy object -gd');
+  is ($i2->get('-gd') != $image->get('-gd'),
+      1,
+      'copy object different -gd');
 }
 
 {
@@ -206,7 +220,9 @@ SKIP: {
                 -zlib_compression => 1);
     is ($image->get('-file'), $filename);
     $image->save;
-    cmp_ok (-s $filename, '>', 0);
+    is (-s $filename > 0,
+       1,
+       'save() file not empty');
   }
 
   # existing file with new(-file)

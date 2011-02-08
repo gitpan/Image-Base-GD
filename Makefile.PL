@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-# Copyright 2010 Kevin Ryde
+# Copyright 2010, 2011 Kevin Ryde
 
 # This file is part of Image-Base-GD.
 #
@@ -17,7 +17,7 @@
 # You should have received a copy of the GNU General Public License along
 # with Image-Base-GD.  If not, see <http://www.gnu.org/licenses/>.
 
-use 5.004;
+use 5.006;
 use strict;
 use warnings;
 use ExtUtils::MakeMaker;
@@ -32,20 +32,20 @@ MyMakeMakerExtras::WriteMakefile
    LICENSE      => 'gpl',
    SIGN         => 1,
    PREREQ_PM    => {
-                    'warnings' => 0,
                     'Image::Base' => '1.12',  # for ellipse() $fill
                     'GD'         => '2.45', # 2.45 for GD::Group inst fix
                     'GD::Simple' => 0,      # no version num in 2.45
 
                     # for testing
                     'Test::More' => 0,
-                    'List::Util' => 0, 
+                    'List::Util' => 0,
                    },
-   MIN_PERL_VERSION => '5.004',
+   # GD is 5.6.0 (in its 2.45 Makefile.PL, perhaps not the GD.pm as such)
+   MIN_PERL_VERSION => '5.006',
 
-   META_MERGE
-   => { resources
-        => { homepage => 'http://user42.tuxfamily.org/image-base-gd/index.html',
-           },
-      },
+   META_MERGE =>
+   { resources =>
+     { homepage => 'http://user42.tuxfamily.org/image-base-gd/index.html',
+     },
+   },
   );

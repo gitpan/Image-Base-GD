@@ -1,4 +1,4 @@
-Copyright 2010 Kevin Ryde
+Copyright 2010, 2011 Kevin Ryde
 
 This file is part of Image-Base-GD.
 
@@ -15,6 +15,9 @@ General Public License for more details.
 You can get a copy of the GNU General Public License online at
 <http://www.gnu.org/licenses/>.
 
+
+Version 10, February 2011
+    - fix Makefile.PL for perl 5.6
 
 Version 9, November 2010
     - help 1x1 filled ellipse on past libgd

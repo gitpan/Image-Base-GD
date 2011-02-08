@@ -1,4 +1,4 @@
-# Copyright 2010 Kevin Ryde
+# Copyright 2010, 2011 Kevin Ryde
 
 # This file is part of Image-Base-GD.
 #
@@ -17,7 +17,7 @@
 
 
 package Image::Base::GD;
-use 5.004;
+use 5.006;
 use strict;
 use warnings;
 use Carp;
@@ -31,7 +31,7 @@ use vars '$VERSION', '@ISA';
 use Image::Base 1.12; # version 1.12 for ellipse() $fill
 @ISA = ('Image::Base');
 
-$VERSION = 9;
+$VERSION = 10;
 
 # uncomment this to run the ### lines
 #use Smart::Comments '###';
@@ -151,7 +151,7 @@ sub save {
 
   # or maybe File::Slurp::write_file($filename,{binmode=>':raw'})
   my $fh;
-  (open $fh, "> $filename"
+  (open $fh, '>', $filename
    and binmode($fh)
    and print $fh $data
    and close $fh)
@@ -431,8 +431,8 @@ consistent with other C<Image::Base> modules.
 
 =item C<$image-E<gt>ellipse ($x1,$y1, $x2,$y2, $colour, $fill)>
 
-Draw an ellipse within the rectangle with corners C<$x1>,C<$y1> and
-C<$x2>,C<$y2>.  Optional C<$fill> true means a filled ellipse.
+Draw an ellipse within the rectangle with top-left corner C<$x1>,C<$y1> and
+bottom-right C<$x2>,C<$y2>.  Optional C<$fill> true means a filled ellipse.
 
 In the current implementation ellipses with odd length sides (meaning
 C<$x2-$x1+1> and C<$y2-$y1+1> both odd numbers) are drawn with GD and the
@@ -508,7 +508,7 @@ http://user42.tuxfamily.org/image-base-gd/index.html
 
 =head1 LICENSE
 
-Image-Base-GD is Copyright 2010 Kevin Ryde
+Image-Base-GD is Copyright 2010, 2011 Kevin Ryde
 
 Image-Base-GD is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by the
