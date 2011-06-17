@@ -24,6 +24,16 @@ use warnings;
 use Smart::Comments;
 
 {
+  require FindBin;
+  require File::Spec;
+  print "bin directory: ", $FindBin::Bin, "\n";
+  my $filename = File::Spec->catfile($FindBin::Bin,
+                                     File::Spec->updir, 't', 'empty.dat');
+  require Image::Base::GD;
+  my $image = Image::Base::GD->new (-file => $filename);
+  exit 0;
+}
+{
   require Image::Base::GD;
   require Image::Xpm;
   my $image = Image::Base::GD->new (-width => 50, -height => 15);

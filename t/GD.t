@@ -20,7 +20,7 @@
 use 5.006;
 use strict;
 use warnings;
-use Test::More tests => 1624;
+use Test::More tests => 1598;
 
 use lib 't';
 use MyTestHelpers;
@@ -128,7 +128,7 @@ sub my_bounding_box_and_sides {
 # VERSION
 
 {
-  my $want_version = 10;
+  my $want_version = 11;
   is ($Image::Base::GD::VERSION, $want_version, 'VERSION variable');
   is (Image::Base::GD->VERSION,  $want_version, 'VERSION class method');
 
@@ -152,12 +152,29 @@ sub my_bounding_box_and_sides {
 }
 
 #------------------------------------------------------------------------------
+# _colour_to_rgb255()
+
+{
+  foreach my $elem (['#AABBCC', [0xAA, 0xBB, 0xCC]],
+                    ['#aabbcc', [0xAA, 0xBB, 0xCC]],
+                    ['#0123456789AB', [0x01, 0x45, 0x89]],
+                    ['#AB03CD02EF01', [0xAB, 0xCD, 0xEF]],
+                    ['#abcdabcdabcd', [0xAB, 0xAB, 0xAB]],
+                   ) {
+    my ($colour, $want_rgb) = @$elem;
+    my @got_rgb = Image::Base::GD::_colour_to_rgb255($colour);
+    is_deeply (\@got_rgb, $want_rgb, "_colour_to_rgb255() $colour");
+  }
+}
+
+#------------------------------------------------------------------------------
 # new()
 
 {
   my $image = Image::Base::GD->new (-width => 6,
                                     -height => 7);
   is ($image->get('-file'), undef);
+  is ($image->get('-file_format'), 'png');
   is ($image->get('-zlib_compression'), -1);
   is ($image->get('-width'), 6);
   is ($image->get('-height'), 7);
@@ -197,49 +214,31 @@ sub my_bounding_box_and_sides {
 }
 
 #------------------------------------------------------------------------------
-# save() / load()
+# new() / load() of empty.dat
 
-my $have_File_Temp = eval { require File::Temp; 1 };
-if (! $have_File_Temp) {
-  diag "File::Temp not available: $@";
+{
+  require FindBin;
+  require File::Spec;
+  my $filename = File::Spec->catfile($FindBin::Bin, 'empty.dat');
+  my $image = Image::Base::GD->new (-width => 1, -height => 1);
+  isnt ($image->get('-gd'), undef);
+
+  my $ret = eval { $image->load($filename); 1 };
+  my $err = $@;
+  # diag "load of $filename: ", $err;
+
+  is ($ret, undef, "load() $filename");
+  ok ($err);
+  isnt ($image->get('-gd'), undef);
 }
-
-SKIP: {
-  $have_File_Temp
-    or skip 'File::Temp not available', 6;
-
-  my $fh = File::Temp->new;
-  my $filename = $fh->filename;
-
-  # save file
-  {
-    my $image = Image::Base::GD->new (-width => 1,
-                                      -height => 1);
-    $image->xy (0,0, '#FFFFFF');
-    $image->set(-file => $filename,
-                -zlib_compression => 1);
-    is ($image->get('-file'), $filename);
-    $image->save;
-    is (-s $filename > 0,
-       1,
-       'save() file not empty');
-  }
-
-  # existing file with new(-file)
-  {
-    my $image = Image::Base::GD->new (-file => $filename);
-    is ($image->get('-file'), $filename);
-    is ($image->xy (0,0), '#FFFFFF');
-  }
-
-  # existing file with load()
-  {
-    my $image = Image::Base::GD->new (-width => 1,
-                                      -height => 1);
-    $image->load ($filename);
-    is ($image->get('-file'), $filename);
-    is ($image->xy (0,0), '#FFFFFF');
-  }
+{
+  require FindBin;
+  require File::Spec;
+  my $filename = File::Spec->catfile($FindBin::Bin, 'empty.dat');
+  my $image = eval { Image::Base::GD->new (-file => $filename) };
+  my $err = $@;
+  is ($image, undef, "new() $filename");
+  ok ($err);
 }
 
 
@@ -423,8 +422,8 @@ foreach my $truecolor (1,0) {
   }
 }
 
-#       $image->save('/tmp/x.png');
-#       system ("convert  -monochrome /tmp/x.png /tmp/x.xpm && cat /tmp/x.xpm");
+# $image->save('/tmp/x.png');
+# system ("convert  -monochrome /tmp/x.png /tmp/x.xpm && cat /tmp/x.xpm");
 
 
 #------------------------------------------------------------------------------

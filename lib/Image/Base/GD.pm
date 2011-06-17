@@ -22,19 +22,20 @@ use strict;
 use warnings;
 use Carp;
 
-# version 2.45 for GD::Group inst fix so GD::Simple works
-# no import of gdBrushed etc constants
+# Version 2.45 for GD::Group install fix so GD::Simple works.
+# No import of gdBrushed etc constants.
 use GD 2.45 ();
 
 use vars '$VERSION', '@ISA';
+$VERSION = 11;
 
 use Image::Base 1.12; # version 1.12 for ellipse() $fill
 @ISA = ('Image::Base');
 
-$VERSION = 10;
 
 # uncomment this to run the ### lines
-#use Smart::Comments '###';
+#use Devel::Comments '###';
+
 
 sub new {
   my ($class, %params) = @_;
@@ -53,28 +54,20 @@ sub new {
   }
 
   my $self = bless { -allocate_colours => 1,
-                     -zlib_compression => -1 }, $class;
+                     -zlib_compression => -1,
+                     -file_format => 'png' }, $class;
   if (! defined $params{'-gd'}) {
-    my $gd;
-    if (defined $params{'-file'}) {
-      ### create from file: $params{'-file'}
-      $gd = GD::Image->new ($params{'-file'});
-    } elsif (exists $params{'-truecolor'}) {
-      ### create -truecolor: !!$params{'-truecolor'}
+    if (defined (my $filename = delete $params{'-file'})) {
+      $self->load ($filename);
 
-      $gd = GD::Image->new (delete $params{'-width'},
-                            delete $params{'-height'},
-                            !! delete $params{'-truecolor'});
     } else {
-      ### create default
-      $gd = GD::Image->new (delete $params{'-width'},
-                            delete $params{'-height'});
+      my $truecolor = !! delete $params{'-truecolor'};
+      my $width = delete $params{'-width'};
+      my $height = delete $params{'-height'};
+      my $gd = $self->{'-gd'} = GD::Image->new ($width, $height, $truecolor)
+        || croak "Cannot create GD";  # undef if cannot create
+      $gd->alphaBlending(0);
     }
-    if (! $gd) {  # undef if cannot create
-      croak "Cannot create GD";
-    }
-    $gd->alphaBlending(0);
-    $self->{'-gd'} = $gd;
   }
   $self->set (%params);
   ### new made: $self
@@ -131,12 +124,110 @@ sub set {
 sub load {
   my ($self, $filename) = @_;
   if (@_ == 1) {
-    $filename = $self->get('-file');
+    $filename = $self->{'-file'};
   } else {
     $self->set('-file', $filename);
   }
-  $self->{'-gd'} = GD::Image->newFromPng ($filename);
+
+  my $fh;
+  open $fh, '<', $filename
+    or croak "Cannot open file $filename: $!";
+  binmode $fh
+    or croak 'Error setting binary mode: ',$!;
+
+  my $filepos = tell($fh);
+  my $bytes = '';
+  read($fh,$bytes,9);
+  ### $bytes
+
+  my $file_format;
+  my $method;
+  if    ($bytes =~ /^\x89PNG/)        { $file_format = 'png';  }
+  elsif ($bytes =~ /^\xFF\xD8/)       { $file_format = 'jpeg'; }
+  elsif ($bytes =~ /^GIF8/)           { $file_format = 'gif';  }
+  elsif ($bytes =~ /^gd2\0/)          { $file_format = 'gd2';  }
+  elsif ($bytes =~ m{^/\* XPM \*/})   { $file_format = 'xpm'; }
+  elsif ($bytes =~ m/^#define /)      { $file_format = 'xbm';
+                                        $method = "_newFromXbm"; }
+  elsif ($bytes =~ m/^\0\0/)          { $file_format = 'wbmp';
+                                        $method = "_newFromWBMP"; }
+  elsif ($bytes =~ /^\xFF[\xFF\xFE]/
+         || (length($bytes) >= 4
+             && do {
+               my ($width, $height) = unpack 'nn', $bytes;
+               -s $fh == 4 + 3 + 256*3 + $width * $height
+             })) {
+    $file_format = 'gd';
+  } else {
+    croak "Unrecognised file format";
+  }
+  $method ||= "newFrom\u$file_format";
+  ### $method
+
+  my $fh_filename = $filename;
+  if ($file_format eq 'xpm' || ! seek($fh,$filepos,0)) {
+    require File::Temp;
+    my $tempfh = File::Temp->new (UNLINK => 0);
+    binmode $tempfh or croak 'Error setting binary mode: ',$!;
+
+    my $rest = do { local $/; <$fh> }; # slurp
+    print $tempfh $bytes, $rest or croak 'Error writing temp file: ',$!;
+    seek $tempfh, 0, 0 or croak "Error rewinding temp file: $!";
+
+    # require File::Copy;
+    # File::Copy::copy($fh,$tempfh)
+    #     or croak "Error copying $filename: $!";
+    ### input size: -s $fh
+    ### copied size: -s $tempfh
+    ### tell fh: tell($fh)
+    ### tell temp: tell($tempfh)
+
+    close $fh or croak "Error closing $filename: $!";
+
+    $fh = $tempfh;
+    $fh_filename = $tempfh->filename;
+  }
+  ### tell: tell($fh)
+
+  my $gd;
+  if ($file_format eq 'xpm') {
+    # newFromXpm() will only read a filename, not a handle
+    ### newFromXpm(): $fh_filename
+    $gd = GD::Image->newFromXpm($fh_filename);
+  } else {
+    $gd = GD::Image->$method($fh);
+  }
+  ### $gd
+
+  close $fh
+    or croak "Error closing $fh_filename: $!";
+
+  if (! $gd) {
+    croak "Unrecognised data or error reading ",$filename;
+
+    # undef $@;
+    # my $err = $@;
+    # newFromXpm() error message dodgy
+    # if (defined $err) {
+    #   croak $err;
+    # } else {
+    # }
+  }
+
+  $self->{'-gd'} = $gd;
+  $self->{'-file_format'} = $file_format;
+  $gd->alphaBlending(0);
 }
+
+# check -file_format, don't call an arbitrary func/method through its name
+my %file_format_save_method = (jpeg => 'jpeg',
+                               gif  => 'gif',
+                               gd   => 'gd',
+                               gd2  => 'gd2',
+                               png  => 'png',
+                               svg  => 'svg', # experimental for GD::SVG::Image
+                              );
+my %text_mode = (svg => 1);
 
 sub save {
   my ($self, $filename) = @_;
@@ -144,18 +235,42 @@ sub save {
   if (@_ == 2) {
     $self->set('-file', $filename);
   } else {
-    $filename = $self->get('-file');
+    $filename = $self->{'-file'};
   }
   ### $filename
-  my $data = $self->{'-gd'}->png ($self->get('-zlib_compression'));
+
+  my $gd = $self->{'-gd'};
+  my $file_format;
+  if (defined ($file_format = $self->{'-file_format'})) {
+    $file_format = lc($file_format);
+  } else {
+    $file_format = 'png'; # default
+  }
+
+  my $data;
+  if ($file_format eq 'png') {
+    $data = $gd->png ($self->get('-zlib_compression'));
+  } elsif ($file_format eq 'wbmp') {
+    # In libgd 2.0.36 gdImageWBMPCtx() the "foreground" index arg becomes
+    # WBMP_BLACK.  In WAP world black is the foreground is it?  In any case
+    # 'black' here makes save+load of a GD to wbmp come back the right way
+    # around.
+    # http://www.wapforum.org/what/technical/SPEC-WAESpec-19990524.pdf
+    ### wbmp fg: $self->colour_to_index('black')
+    $data = $gd->wbmp ($self->colour_to_index('black'));
+  } elsif (my $method = $file_format_save_method{$file_format}) {
+    $data = $gd->$method;
+  } else {
+    croak 'Cannot save file format ',$file_format;
+  }
 
   # or maybe File::Slurp::write_file($filename,{binmode=>':raw'})
   my $fh;
   (open $fh, '>', $filename
-   and binmode($fh)
+   and ($text_mode{$file_format} || binmode($fh))
    and print $fh $data
    and close $fh)
-    or croak "Cannot write file $filename: $!";
+    or croak "Error writing $filename: $!";
 }
 
 sub xy {
@@ -177,7 +292,7 @@ sub xy {
       return 'None';
     }
     #### rgb: $gd->rgb($pixel)
-    return sprintf ('#%02X%02X%02X', $gd->rgb ($pixel));
+    return sprintf ('#%02X%02X%02X', $gd->rgb($pixel));
   }
 }
 sub line {
@@ -190,7 +305,8 @@ sub rectangle {
   ### Image-Base-GD rectangle: @_
   # ### index: $self->colour_to_index($colour)
 
-  # gd 2.39 draws a $y1==$y2 unfilled rectangle with dodgy sides on like
+  # libgd circa 2.0.35 draws a $y1==$y2 unfilled rectangle with dodgy sides
+  # on like
   #
   #     *      *
   #     ********
@@ -206,36 +322,36 @@ sub rectangle {
 
 sub ellipse {
   my ($self, $x1, $y1, $x2, $y2, $colour, $fill) = @_;
-  ### Image-GD ellipse: "$x1, $y1, $x2, $y2, $colour, ".($fill?1:0)
+  ### Image-GD ellipse: "$x1, $y1, $x2, $y2, $colour, ".($fill||0)
 
   # If width $xw or height $yw is an odd number then GD draws the extra
   # pixel on the higher value side, ie. the centre is the rounded-down
-  # position.  Hope that can be relied on ...
+  # position.  Dunno if that should be relied on.
   #
-  # some versions of libgd prior to 2.0.36 seem to drawn nothing for
+  # some versions of libgd prior to 2.0.36 seem to draw nothing for
   # filledEllipse() on an x1==x2 y1==y2 single-pixel ellipse.  Try sending 1
   # or 2 pixel wide or high to the base ellipse() and from there to
   # filledRectangle() instead.
   #
   my $xw = $x2 - $x1;
-  if ($xw > 1 && ! ($xw & 1)) {
-    my $yw = $y2 - $y1;
-    if ($yw > 1 && ! ($yw & 1)) {
-      ### x centre: $x1 + $xw/2
-      ### y centre: $y1 + $yw/2
-      ### $xw+1
-      ### $yw+1
-      my $method = ($fill ? 'filledEllipse'
-                    : 'ellipse');
-      $self->{'-gd'}->$method ($x1 + $xw/2, $y1 + $yw/2,
-                               $xw+1, $yw+1,
-                               $self->colour_to_index($colour));
-      return;
-    }
+  my $yw = $y2 - $y1;
+  my $gd = $self->{'-gd'};
+  if ($gd->isa('GD::SVG::Image')
+      || ($xw > 1 && ! ($xw & 1)
+          && $yw > 1 && ! ($yw & 1))) {
+    ### x centre: $x1 + $xw/2
+    ### y centre: $y1 + $yw/2
+    ### $xw+1
+    ### $yw+1
+    my $method = ($fill ? 'filledEllipse'
+                  : 'ellipse');
+    $gd->$method ($x1 + $xw/2, $y1 + $yw/2,
+                  $xw+1, $yw+1,
+                  $self->colour_to_index($colour));
+  } else {
+    ### use Image-Base by pixels
+    shift->SUPER::ellipse(@_);
   }
-
-  ### use Image-Base
-  shift->SUPER::ellipse(@_);
 }
 
 sub add_colours {
@@ -340,7 +456,7 @@ sub _colour_to_rgb255 {
 1;
 __END__
 
-=for stopwords PNG GD filename undef Ryde Zlib Zlib's truecolor RGBA
+=for stopwords GD gd libgd filename Ryde Zlib Zlib's truecolor RGBA PNG png JPEG jpeg XPM WBMP SVG svg GIF
 
 =head1 NAME
 
@@ -366,18 +482,50 @@ C<Image::Base::GD> is a subclass of C<Image::Base>,
 
 =head1 DESCRIPTION
 
-C<Image::Base::GD> extends C<Image::Base> to create or update PNG format
-image files using the C<GD> module and library (version 2 or higher).
+C<Image::Base::GD> extends C<Image::Base> to create or update image files in
+various formats using the C<GD> module and library (version 2 or higher).
 
-The native GD drawing has lots more features, but this module is an easy way
-to point C<Image::Base> style code at a GD and is a good way to get PNG out
-of some C<Image::Base> code.
+Native GD drawing has many more features, but this module is an easy way to
+point C<Image::Base> style code at a GD and is a good way to get PNG and
+other formats out of C<Image::Base> code.
 
-Colour names for drawing are taken from the C<GD::Simple> C<color_table()>,
-plus hex "#RRGGBB" or "#RRRRGGGGBBBB".  Special colour "None" means
-transparent.  Colours are allocated when first used.  4-digit
+Colour names for drawing are from the C<GD::Simple-E<gt>color_names()> list
+(see L<GD::Simple>), plus hex "#RRGGBB" or "#RRRRGGGGBBBB".  Special colour
+"None" means transparent.  Colours are allocated when first used.  4-digit
 "#RRRRGGGGBBBB" forms are truncated to the high 2 digits since GD works in
 8-bit components.
+
+=head2 File Formats
+
+C<GD> can read and write the following formats
+
+    png      with libpng
+    jpeg     with libjpeg
+    gif      unless disabled in GD.pm
+    wbmp     wireless app bitmap
+    gd       GD's own format, raw
+    gd2      GD's own format, compressed
+
+And read only,
+
+    xpm      with libXpm
+    xbm
+
+PNG, JPEG and XPM depend on libgd being compiled with the respective support
+libraries.  Perl C<GD> interface has an option to disable GIF.
+
+C<load()> detect the format then calls the corresponding C<newFromPng()>
+etc.  "gd" format differs between libgd 1.x and 2.x.  Both can be loaded,
+but libgd 2.x always writes 2.x format so that's what C<save()> will give.
+"gd" is an uncompressed byte dump and mainly intended for temporary files.
+
+WBMP is a bitmap format and is treated by GD as colours black "#000000" for
+0 and white "#FFFFFF" for 1.  On save anything except black is saved as 1,
+but it's probably not a good idea to depend on that.
+
+It mostly works to pass in a C<GD::SVG::Image> (see L<GD::SVG>) as a C<-gd>
+object and ask for C<-file_format> "svg" to save, but don't rely on that
+quite yet since perhaps it'd be better as a subclass.
 
 =head1 FUNCTIONS
 
@@ -405,7 +553,7 @@ Create and return a copy of C<$image>.  The GD within C<$image> is cloned
 image as per C<set>.
 
     # copy image, new compression level
-    my $new_image = $image->new (zlib_compression => 9);
+    my $new_image = $image->new (-zlib_compression => 9);
 
 =item C<$colour = $image-E<gt>xy ($x, $y)>
 
@@ -441,7 +589,7 @@ widths very well.  This different handling is a bit inconsistent.
 
 =item C<$image-E<gt>add_colours ($name, $name, ...)>
 
-Add colours to the GD palette.  Colour names are the same as to the drawing
+Add colours to the GD palette.  Colour names are the same as for the drawing
 functions.
 
     $image->add_colours ('red', 'green', '#FF00FF');
@@ -451,7 +599,23 @@ so C<add_colours> in not needed, but it can be used to initialize the
 palette with particular desired colours.
 
 For a truecolor GD C<add_colours> does nothing since in that case each pixel
-has RGBA component values, rather than an index into a palette.
+has its own RGBA, rather than an index into a palette.
+
+=item C<< $image->load >>
+
+=item C<< $image->load ($filename) >>
+
+Read the C<-file>, or set C<-file> to C<$filename> and then read.  This
+creates and sets a new underlying C<-gd> because it's not possible to read
+into an existing GD image object, only a new one.
+
+=item C<$image-E<gt>save>
+
+=item C<$image-E<gt>save ($filename)>
+
+Save to C<-file>, or with a C<$filename> argument set C<-file> then save to
+that.  The file format written is taken from the C<-file_format> (see
+below).
 
 =back
 
@@ -472,11 +636,22 @@ GD (which doesn't have a palette).
 
 This count is similar to the C<-ncolours> of C<Image::Xpm>.
 
-=item C<-zlib_compression> (integer 0-9 or -1)
+=item C<-file_format> (string)
+
+The file format as a string like "png" or "jpeg".  See L</File Formats>
+above for the choices.
+
+After C<load()> the C<-file_format> is the format read.  Setting
+C<-file_format> can change the format for a subsequent C<save>.
+
+The default is "png", which means a newly created image (not read from a
+file) is saved as PNG by default.
+
+=item C<-zlib_compression> (integer 0-9 or -1, default -1)
 
 The amount of data compression to apply when saving.  The value is Zlib
 style 0 for no compression up to 9 for maximum effort.  -1 means Zlib's
-default level.
+default level (usually 6).
 
 =item C<-gd>
 

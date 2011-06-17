@@ -24,11 +24,14 @@
 
 
 package MyTestImageBase;
+BEGIN { require 5 }
 use strict;
 
-use vars '$white', '$white_expect', '$black';
+use vars '$white', '$white_expect', '$black', '$skip', '$handle_input';
 $white = 'white';
 $black = 'black';
+$skip = undef;
+$handle_input = sub {};
 
 # uncomment this to run the ### lines
 #use Smart::Comments;
@@ -55,11 +58,22 @@ sub max {
 }
 
 sub is {
+  &$handle_input();
   if (Test::More->can('is')) {
-    &Test::More::is (@_); # no prototypes
+    if (defined $skip) {
+    SKIP: {
+        &Test::More::skip ($skip, 1); # no prototypes
+      }
+    } else {
+      &Test::More::is (@_); # no prototypes
+    }
   } else {
-    &Test::ok (@_); # no prototypes
+    &Test::skip ($skip, @_); # no prototypes
   }
+  # if (Test->can('is')) {
+  #   } else {
+  #     die "Oops, neither Test nor Test::More loaded";
+  #   }
 }
 
 sub mung_colour {
@@ -74,13 +88,18 @@ sub mung_colour {
 }
 
 sub dump_image {
-  my ($image, $x1,$x2, $y, $colour, $name) = @_;
+  my ($image) = @_;
+  if (defined $skip) {
+    return;
+  }
   my $width = $image->get('-width');
   my $height = $image->get('-height');
   MyTestHelpers::diag("dump_image");
-  foreach my $y (0 .. $height-1) {
+  my $y;
+  foreach $y (0 .. $height-1) {
     my $str = '';
-    foreach my $x (0 .. $width-1) {
+    my $x;
+    foreach $x (0 .. $width-1) {
       my $colour = mung_colour($image->xy($x,$y));
       if ($colour eq $black) {
         $str .= '_';
@@ -99,7 +118,8 @@ sub is_pixel {
   my $width = $image->get('-width');
 
   my $got = mung_colour($image->xy($x,$y));
-  is ($got, $colour, "pixel $x,$y  $colour  on $name");
+  is ($got, $colour,
+      "pixel $x,$y  $colour  on $name");
   my $bad = ($got ne $colour);
   ### $bad
   return $bad;
@@ -113,9 +133,11 @@ sub is_hline {
   return 0 if $x2 < 0 || $x1 >= $width;
 
   my $bad = 0;
-  foreach my $x (max(0,$x1) .. min($x2,$width-1)) {
+  my $x;
+  foreach $x (max(0,$x1) .. min($x2,$width-1)) {
     my $got = mung_colour($image->xy($x,$y));
-    is ($got, $colour, "hline $x,$y  $colour  on $name");
+    is ($got, $colour,
+        "hline $x,$y  $colour  on $name");
     $bad += ($got ne $colour);
   }
   ### $bad
@@ -132,7 +154,8 @@ sub is_vline {
   my $bad = 0;
   foreach my $y (max(0,$y1) .. min($y2,$height-1)) {
     my $got = mung_colour($image->xy($x,$y));
-    is ($got, $colour, "vline x=$x,y=$y want $colour  on $name");
+    is ($got, $colour,
+        "vline x=$x,y=$y want $colour  on $name");
     $bad += ($got ne $colour);
   }
   ### $bad
@@ -167,63 +190,69 @@ sub is_filled_rect {
 # demand that one or more pixels in hline have $colour
 sub some_hline {
   my ($image, $x1,$x2, $y, $colour, $name) = @_;
+  my $bad = 1;
   ($x1,$x2) = ($x2,$x1) if $x1 > $x2;
   foreach my $x ($x1 .. $x2) {
     ### some_hline look at: "$x,$y"
     my $got = mung_colour($image->xy($x,$y));
     if ($got eq $colour) {
-      return 0; # good
+      $bad = 0;
+      last;
     }
   }
-  is (0,1,
+  is ($bad, 0,
       "some_hline x=$x1..$x2,y=$y  $colour  on $name");
-  return 1; # bad
+  return $bad;
 }
 
 sub some_vline {
   my ($image, $x, $y1,$y2, $colour, $name) = @_;
+  my $bad = 1;
   ($y1,$y2) = ($y2,$y1) if $y1 > $y2;
   foreach my $y ($y1 .. $y2) {
     my $got = mung_colour($image->xy($x,$y));
     if ($got eq $colour) {
-      return 0; # good
+      $bad = 0;
+      last;
     }
   }
-  is (0,1,
+  is ($bad, 0,
       "some_vline x=$x,y=$y1..$y2  $colour  on $name");
-  return 1; # bad
+  return $bad;
 }
 
 # demand that all pixels $x1 to $x2 inclusive have $colour
 sub all_hline {
   my ($image, $x1,$x2, $y, $colour, $name) = @_;
+  my $bad = 0;
   ($x1,$x2) = ($x2,$x1) if $x1 > $x2;
   foreach my $x ($x1 .. $x2) {
     ### all_hline look at: "$x,$y c=".$image->xy($x,$y)
     my $got = mung_colour($image->xy($x,$y));
-    is ($got, $colour,
-        "all_hline x=$x1..$x2,y=$y  $colour  on $name");
     if ($got ne $colour) {
-      return 1; # bad
+      $bad = 1;
     }
   }
-  return 0; # good
+  is ($bad, 0,
+      "all_hline x=$x1..$x2,y=$y  $colour  on $name");
+  return $bad;
 }
 
 # demand that all pixels $y1 to $y2 inclusive have $colour
 sub all_vline {
   my ($image, $x, $y1,$y2, $colour, $name) = @_;
+  my $bad = 0;
   ($y1,$y2) = ($y2,$y1) if $y1 > $y2;
   foreach my $y ($y1 .. $y2) {
     ### all_hline look at: "$x,$y"
     my $got = mung_colour($image->xy($x,$y));
-    is ($got, $colour,
-        "all_vline x=$x,y=$y1..$y  $colour  on $name");
     if ($got ne $colour) {
-      return 1; # bad
+      $bad = 1;
     }
   }
-  return 0; # good
+  is ($bad, 0,
+      "all_vline x=$x,y=$y1..$y2  $colour  on $name");
+  return $bad;
 }
 
 
@@ -279,7 +308,7 @@ sub check_rectangle {
 
   foreach my $method ('rectangle',
                       ($image->can('Image_Base_Other_rectangles')
-                       ? (__PACKAGE__.'::rect_using_Other')
+                       ? ('MyTestImageBase::rect_using_Other')
                        : ())) {
 
     foreach my $elem (@sizes) {
@@ -337,6 +366,7 @@ sub check_ellipse {
     foreach my $fillaref ([], [1]) {
       my $fill = ($fillaref->[0] || 0);
       my $name = "ellipse $x1,$y1, $x2,$y2, fill=$fill";
+      # MyTestHelpers::diag($name);
 
       # if ($options{'base_ellipse'}
       #     || $basefunc->($x1,$y1, $x2,$y2)) {
