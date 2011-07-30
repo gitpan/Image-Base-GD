@@ -17,35 +17,18 @@
 # You should have received a copy of the GNU General Public License along
 # with Image-Base-GD.  If not, see <http://www.gnu.org/licenses/>.
 
-use 5.006;
+use 5.010;
 use strict;
 use warnings;
-
+use GD::SVG;
 use Smart::Comments;
 
 {
-  my @ords = grep { ! (($_ >= 0x7F && $_ <= 0x9F)
-                       || ($_ >= 0xD800 && $_ <= 0xDFFF)
-                       || ($_ >= 0xFDD0 && $_ <= 0xFDEF)
-                       || ($_ >= 0xFFFE && $_ <= 0xFFFF)
-                       || ($_ >= 0x1FFFE && $_ <= 0x1FFFF)) }
-    32 .. 0x2FA1D;
-  foreach my $ord (@ords) {
-    my $c = chr($ord);
-    if ($c =~ /[[:xdigit:]]/) {
-      my $h = hex($c);
-      print "$ord  $h\n";
-    }
-    
-  }
-  exit 0;
-}
+  my $gd = GD::SVG::Image->new (100, 100);
+  my $index = $gd->colorAllocate(255,0,255);
+  printf "index %X\n", $index;
 
-{
-  require Image::Base::GD;
-  my $gd = Image::Base::GD->new (-width => 10, -height => 10);
-  $gd->rectangle (0,0, 9,9, 'black');
-  $gd->rectangle (3,3, 7,7, '#FFFF0000FFFF');
+  $gd->ellipse (5,5, 6,6, 1);
 
-  exit 0;
+  print $gd->svg;
 }

@@ -1,7 +1,7 @@
 --- #YAML:1.0
 name:               Image-Base-GD
-version:            11
-abstract:           Image::Base on PNG files using GD.
+version:            12
+abstract:           Image::Base on PNG and other files using GD.
 author:
     - Kevin Ryde <user42@zip.com.au>
 license:            gpl
@@ -44,6 +44,7 @@ optional_features:
             Test::DistManifest:  0
             Test::Pod:           1.00
             Test::Synopsis:      0
+            Test::Weaken:        2.000
             Test::YAML::Meta:    0.15
             YAML:                0
             YAML::Syck:          0

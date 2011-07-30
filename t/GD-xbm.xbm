@@ -1,4 +1,0 @@
-#define GD_xbm_width 2
-#define GD_xbm_height 1
-static unsigned char GD_xbm_bits[] = {
- 0x02 } ;

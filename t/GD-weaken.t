@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-# Copyright 2010, 2011 Kevin Ryde
+# Copyright 2011 Kevin Ryde
 
 # This file is part of Image-Base-GD.
 #
@@ -20,32 +20,24 @@
 use 5.006;
 use strict;
 use warnings;
+use Test::More;
+use Image::Base::GD;
 
-use Smart::Comments;
+use lib 't';
+use MyTestHelpers;
+BEGIN { MyTestHelpers::nowarnings() }
 
-{
-  my @ords = grep { ! (($_ >= 0x7F && $_ <= 0x9F)
-                       || ($_ >= 0xD800 && $_ <= 0xDFFF)
-                       || ($_ >= 0xFDD0 && $_ <= 0xFDEF)
-                       || ($_ >= 0xFFFE && $_ <= 0xFFFF)
-                       || ($_ >= 0x1FFFE && $_ <= 0x1FFFF)) }
-    32 .. 0x2FA1D;
-  foreach my $ord (@ords) {
-    my $c = chr($ord);
-    if ($c =~ /[[:xdigit:]]/) {
-      my $h = hex($c);
-      print "$ord  $h\n";
-    }
-    
-  }
-  exit 0;
-}
+eval "use Test::Weaken 2.000; 1"
+  or plan skip_all => "due to Test::Weaken 2.000 not available -- $@";
+diag ("Test::Weaken version ", Test::Weaken->VERSION);
+
+plan tests => 1;
 
 {
-  require Image::Base::GD;
-  my $gd = Image::Base::GD->new (-width => 10, -height => 10);
-  $gd->rectangle (0,0, 9,9, 'black');
-  $gd->rectangle (3,3, 7,7, '#FFFF0000FFFF');
-
-  exit 0;
+  my $leaks = Test::Weaken::leaks
+    (sub { return Image::Base::GD->new (-width => 6, -height => 7) });
+  is ($leaks, undef, 'deep garbage collection');
+  MyTestHelpers::test_weaken_show_leaks($leaks);
 }
+
+exit 0;

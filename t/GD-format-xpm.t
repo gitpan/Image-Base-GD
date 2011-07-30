@@ -20,7 +20,7 @@
 use 5.006;
 use strict;
 use warnings;
-use Test::More tests => 8;
+use Test::More;
 
 use lib 't';
 use MyTestHelpers;
@@ -28,20 +28,27 @@ BEGIN { MyTestHelpers::nowarnings() }
 
 use Image::Base::GD;
 
+use GD;
+eval { GD::Image->newFromXpm('t/GD-format-xpm.xpm') }
+  or plan skip_all => "due to no xpm support in GD -- $@";
+
+plan tests => 12;
+
 
 #------------------------------------------------------------------------------
-# load() original GD 1.x format
+# load() only for xpm
 
-my $filename = 't/GD-gd1.gd';
+my $filename = 't/GD-format-xpm.xpm';
 
 # new(-file)
 {
   my $image = Image::Base::GD->new (-file => $filename);
-  $image->add_colours('#111111','#222222');
   is ($image->get('-file'), $filename);
-  is ($image->get('-file_format'), 'gd');
-  is ($image->get('-width'), 13);
-  is ($image->get('-height'), 17);
+  is ($image->get('-file_format'), 'xpm');
+  is ($image->get('-width'), 2);
+  is ($image->get('-height'), 1);
+  is ($image->xy(0,0), '#FFFFFF');
+  is ($image->xy(1,0), '#000000');
 }
 
 # load()
@@ -49,11 +56,12 @@ my $filename = 't/GD-gd1.gd';
   my $image = Image::Base::GD->new (-width => 10,
                                     -height => 10);
   $image->load ($filename);
-  $image->add_colours('#111111','#222222');
   is ($image->get('-file'), $filename);
-  is ($image->get('-file_format'), 'gd');
-  is ($image->get('-width'), 13);
-  is ($image->get('-height'), 17);
+  is ($image->get('-file_format'), 'xpm');
+  is ($image->get('-width'), 2);
+  is ($image->get('-height'), 1);
+  is ($image->xy(0,0), '#FFFFFF');
+  is ($image->xy(1,0), '#000000');
 }
 
 exit 0;

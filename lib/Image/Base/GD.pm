@@ -22,12 +22,8 @@ use strict;
 use warnings;
 use Carp;
 
-# Version 2.45 for GD::Group install fix so GD::Simple works.
-# No import of gdBrushed etc constants.
-use GD 2.45 ();
-
 use vars '$VERSION', '@ISA';
-$VERSION = 11;
+$VERSION = 12;
 
 use Image::Base 1.12; # version 1.12 for ellipse() $fill
 @ISA = ('Image::Base');
@@ -44,7 +40,7 @@ sub new {
   # $obj->new(...) means make a copy, with some extra settings
   if (ref $class) {
     my $self = $class;
-    $class = ref $class;
+    $class = ref $self;
     if (! defined $params{'-gd'}) {
       $params{'-gd'} = $self->get('-gd')->clone;
     }
@@ -64,6 +60,7 @@ sub new {
       my $truecolor = !! delete $params{'-truecolor'};
       my $width = delete $params{'-width'};
       my $height = delete $params{'-height'};
+      require GD;
       my $gd = $self->{'-gd'} = GD::Image->new ($width, $height, $truecolor)
         || croak "Cannot create GD";  # undef if cannot create
       $gd->alphaBlending(0);
@@ -151,6 +148,21 @@ sub load {
                                         $method = "_newFromXbm"; }
   elsif ($bytes =~ m/^\0\0/)          { $file_format = 'wbmp';
                                         $method = "_newFromWBMP"; }
+
+  # Image::WMF (as of 1.01) doesn't have a file reader to then extend perhaps.
+  # elsif ($bytes =~ m/^\327\315\306\232/) {
+  #   require Image::WMF;
+  #   my $class = 'Image::WMF';
+  #   $file_format = 'wmf';
+  #   $method = "newFromWMF"; }
+
+  # GD::SVG (as of 0.33) doesn't have a file reader to then extend perhaps.
+  # elsif ($bytes =~ m/^<?xml/) {
+  #   require GD::SVG;
+  #   my $class = 'GD::SVG::Image';
+  #   $file_format = 'svg';
+  #   $method = "newFromSVG"; }
+
   elsif ($bytes =~ /^\xFF[\xFF\xFE]/
          || (length($bytes) >= 4
              && do {
@@ -189,6 +201,7 @@ sub load {
   }
   ### tell: tell($fh)
 
+  require GD;
   my $gd;
   if ($file_format eq 'xpm') {
     # newFromXpm() will only read a filename, not a handle
@@ -226,6 +239,7 @@ my %file_format_save_method = (jpeg => 'jpeg',
                                gd2  => 'gd2',
                                png  => 'png',
                                svg  => 'svg', # experimental for GD::SVG::Image
+                               wmf  => 'wmf', # experimental for Image::WMF
                               );
 my %text_mode = (svg => 1);
 
@@ -250,6 +264,9 @@ sub save {
   my $data;
   if ($file_format eq 'png') {
     $data = $gd->png ($self->get('-zlib_compression'));
+  } elsif ($file_format eq 'jpeg') {
+    my $quality = $self->get('-quality_percent');
+    $data = $gd->jpeg (defined $quality ? $quality : -1);
   } elsif ($file_format eq 'wbmp') {
     # In libgd 2.0.36 gdImageWBMPCtx() the "foreground" index arg becomes
     # WBMP_BLACK.  In WAP world black is the foreground is it?  In any case
@@ -306,7 +323,7 @@ sub rectangle {
   # ### index: $self->colour_to_index($colour)
 
   # libgd circa 2.0.35 draws a $y1==$y2 unfilled rectangle with dodgy sides
-  # on like
+  # like
   #
   #     *      *
   #     ********
@@ -354,6 +371,49 @@ sub ellipse {
   }
 }
 
+sub diamond {
+  my ($self, $x1, $y1, $x2, $y2, $colour, $fill) = @_;
+  ### Image-Base-GD diamond() ...
+
+  my $gd = $self->{'-gd'};
+  if ($x1 == $x2 || $y1 == $y2) {
+    # as of libgd 2.0.36 a filledpolygon of 1x1 or Nx1 draws no pixels, go
+    # to rectangle in that case
+    $gd->filledRectangle ($x1,$y1,$x2,$y2,
+                          $self->colour_to_index($colour));
+
+  } else {
+
+    my $xh = ($x2 - $x1 + 1);
+    my $yh = ($y2 - $y1 + 1);
+    my $xeven = ! ($xh & 1);
+    my $yeven = ! ($yh & 1);
+    $xh = int($xh / 2);
+    $yh = int($yh / 2);
+
+    my $poly = GD::Polygon->new;
+    $poly->addPt ($x1+$xh,$y1);  # top centre
+
+    # left
+    $poly->addPt ($x1,$y1+$yh);
+    if ($yeven) { $poly->addPt ($x1,$y2-$yh); }
+
+    # bottom
+    $poly->addPt ($x1+$xh,$y2);
+    if ($xeven) { $poly->addPt ($x2-$xh,$y2); }
+
+    # right
+    if ($yeven) { $poly->addPt ($x2,$y2-$yh); }
+    $poly->addPt ($x2,$y1+$yh);
+
+    # top again
+    if ($xeven) { $poly->addPt ($x2-$xh,$y1); }
+
+    my $method = ($fill ? 'filledPolygon' : 'openPolygon');
+    $gd->$method ($poly, $self->colour_to_index($colour));
+  }
+}
+
 sub add_colours {
   my $self = shift;
   ### add_colours: @_
@@ -379,7 +439,8 @@ sub add_colours {
 
     } else {
       my @rgb = _colour_to_rgb255($colour);
-      if ($gd->colorExact(@rgb) != -1) {
+      if ($gd->can('colorExact')  # not available in Image::WMF
+          && $gd->colorExact(@rgb) != -1) {
         ### already exists: $gd->colorExact(@rgb)
         next;
       }
@@ -397,6 +458,9 @@ sub colour_to_index {
   my ($self, $colour) = @_;
   ### Image-Base-GD colour_to_index(): $colour
   my $gd = $self->{'-gd'};
+  # while ($gd->isa('GD::Window')) {
+  #   $gd = $gd->{im};
+  # }
 
   if ($colour eq 'None') {
     if ($gd->isTrueColor) {
@@ -424,8 +488,10 @@ sub colour_to_index {
   }
 
   my @rgb = _colour_to_rgb255($colour);
+  ### @rgb
   if ($self->{'-allocate_colours'}) {
-    if ((my $index = $gd->colorExact (@rgb)) != -1) {
+    if ($gd->can('colorExact')  # not available in Image::WMF
+        && (my $index = $gd->colorExact (@rgb)) != -1) {
       ### existing exact: $index
       return $index;
     }
@@ -440,10 +506,14 @@ sub colour_to_index {
 
 sub _colour_to_rgb255 {
   my ($colour) = @_;
-  my @rgb;
-  if ((@rgb = ($colour =~ /^#([0-9A-F]{2})([0-9A-F]{2})([0-9A-F]{2})$/i))
-      || (@rgb = ($colour =~ /^#([0-9A-F]{2})[0-9A-F]{2}([0-9A-F]{2})[0-9A-F]{2}([0-9A-F]{2})[0-9A-F]{2}$/i))) {
-    return map {hex} @rgb;
+  # Crib: [:xdigit:] matches some wide chars, but hex() as of perl 5.12.4
+  # doesn't accept them, so only 0-9A-F
+  if ($colour =~ /^#(([0-9A-F]{3}){1,4})$/i) {
+    my $len = length($1)/3; # of each group, so 1,2,3 or 4
+    return (map {hex(substr($_ x 2, 0, 2))} # first 2 chars of replicated
+            substr ($colour, 1, $len),      # full size groups
+            substr ($colour, 1+$len, $len),
+            substr ($colour, -$len));
   }
   require GD::Simple;
   if (defined (my $aref = GD::Simple->color_names->{lc($colour)})) {
@@ -460,7 +530,7 @@ __END__
 
 =head1 NAME
 
-Image::Base::GD -- draw PNG format images
+Image::Base::GD -- draw images with GD
 
 =head1 SYNOPSIS
 
@@ -483,21 +553,32 @@ C<Image::Base::GD> is a subclass of C<Image::Base>,
 =head1 DESCRIPTION
 
 C<Image::Base::GD> extends C<Image::Base> to create or update image files in
-various formats using the C<GD> module and library (version 2 or higher).
+various formats using the C<GD> module and library (libgd version 2 or
+higher).
 
-Native GD drawing has many more features, but this module is an easy way to
+Native GD drawing has many more features but this module is an easy way to
 point C<Image::Base> style code at a GD and is a good way to get PNG and
 other formats out of C<Image::Base> code.
 
-Colour names for drawing are from the C<GD::Simple-E<gt>color_names()> list
-(see L<GD::Simple>), plus hex "#RRGGBB" or "#RRRRGGGGBBBB".  Special colour
-"None" means transparent.  Colours are allocated when first used.  4-digit
-"#RRRRGGGGBBBB" forms are truncated to the high 2 digits since GD works in
-8-bit components.
+=head2 Colour Names
+
+Colour names for drawing are
+
+    GD::Simple->color_names()
+    "None"           transparent
+    "#RGB"           hex upper or lower case
+    "#RRGGBB"
+    "#RRRGGGBBB"
+    "#RRRRGGGGBBBB"
+
+See L<GD::Simple> for its C<color_names()> list.  Special "None" means
+transparent.  Colours are allocated when first used.  GD works in 8-bit
+components so 3 and 4-digit hex forms are truncated to the high 2 digits,
+and 1-digit hex "#123" expands to "#112233".
 
 =head2 File Formats
 
-C<GD> can read and write the following formats
+C<GD> can read and write
 
     png      with libpng
     jpeg     with libjpeg
@@ -511,21 +592,36 @@ And read only,
     xpm      with libXpm
     xbm
 
-PNG, JPEG and XPM depend on libgd being compiled with the respective support
-libraries.  Perl C<GD> interface has an option to disable GIF.
+PNG, JPEG and XPM are available if libgd is compiled with the respective
+support libraries.  GIF may not be available if the Perl C<GD> interface was
+built with its option to disable GIF.
 
-C<load()> detect the format then calls the corresponding C<newFromPng()>
-etc.  "gd" format differs between libgd 1.x and 2.x.  Both can be loaded,
-but libgd 2.x always writes 2.x format so that's what C<save()> will give.
-"gd" is an uncompressed byte dump and mainly intended for temporary files.
+C<load()> auto-detects the format and calls the corresponding
+C<newFromPng()> etc.  "gd" format differs between libgd 1.x and 2.x.  libgd
+2.x can load the 1.x format, but always writes 2.x so that's what C<save()>
+here will give.  Both "gd" formats are an uncompressed byte dump mainly
+intended for temporary files.
 
 WBMP is a bitmap format and is treated by GD as colours black "#000000" for
-0 and white "#FFFFFF" for 1.  On save anything except black is saved as 1,
-but it's probably not a good idea to depend on that.
+0 and white "#FFFFFF" for 1.  On save any non-black is treated as white and
+as 1 too, but it's probably not a good idea to depend on that.
 
-It mostly works to pass in a C<GD::SVG::Image> (see L<GD::SVG>) as a C<-gd>
-object and ask for C<-file_format> "svg" to save, but don't rely on that
-quite yet since perhaps it'd be better as a subclass.
+=head2 Other GD Modules
+
+Some other modules implement a GD-like interface with other output types or
+features.  To the extent they're GD-compatible they ought to work passed in
+as a C<-gd> object.
+
+C<GD::SVG::Image> (see L<GD::SVG>) can be saved by setting C<-file_format>
+to "svg".  (But see C<Image::Base::SVG> to go directly to an C<SVG> module
+object if that's desired.)
+
+C<Image::WMF> (see L<Image::WMF>) can be saved by setting C<-file_format>
+to "wmf".
+
+C<GD::Window> (see L<GD::Window>) as of its version 0.02 almost works in
+C<passThrough> mode, but look for a bug fix for that C<passThrough> post
+0.02.
 
 =head1 FUNCTIONS
 
@@ -561,7 +657,7 @@ image as per C<set>.
 
 Get or set an individual pixel.
 
-Currently colours returned are in hex "#RRGGBB" form, or "None" for a fully
+Currently the C<$colour> return is hex "#RRGGBB", or "None" for a fully
 transparent pixel.  Partly transparent pixels are returned as a colour.
 
 =item C<$image-E<gt>rectangle ($x1,$y1, $x2,$y2, $colour, $fill)>
@@ -585,7 +681,8 @@ bottom-right C<$x2>,C<$y2>.  Optional C<$fill> true means a filled ellipse.
 In the current implementation ellipses with odd length sides (meaning
 C<$x2-$x1+1> and C<$y2-$y1+1> both odd numbers) are drawn with GD and the
 rest go to C<Image::Base> because GD circa 2.0.36 doesn't seem to draw even
-widths very well.  This different handling is a bit inconsistent.
+widths very well.  This different handling for different sizes is a bit
+inconsistent.
 
 =item C<$image-E<gt>add_colours ($name, $name, ...)>
 
@@ -647,11 +744,21 @@ C<-file_format> can change the format for a subsequent C<save>.
 The default is "png", which means a newly created image (not read from a
 file) is saved as PNG by default.
 
+=item C<-quality_percent> (0 to 100 or C<undef>)
+
+The image quality when saving to JPEG format.  JPEG compresses by reducing
+colours and resolution.  100 means full quality, no such reductions.
+C<undef> means the libjpeg default (which is normally 75).
+
+This becomes the C<$quality> parameter to C<$gd-E<gt>jpeg()>.
+
 =item C<-zlib_compression> (integer 0-9 or -1, default -1)
 
 The amount of data compression to apply when saving.  The value is Zlib
 style 0 for no compression up to 9 for maximum effort.  -1 means Zlib's
 default level (usually 6).
+
+This becomes the C<$compression_level> parameter to C<$gd-E<gt>png()>.
 
 =item C<-gd>
 
@@ -673,9 +780,12 @@ blending off and leave it off on first drawing any None.
 
 L<Image::Base>,
 L<GD>,
-L<GD::Simple>,
+L<GD::Simple>
+
 L<Image::Base::PNGwriter>,
 L<Image::Xpm>
+
+L<GD::SVG>, L<GD::Window>, L<Image::WMF>
 
 =head1 HOME PAGE
 

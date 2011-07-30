@@ -26,7 +26,7 @@ use MyMakeMakerExtras;
 
 MyMakeMakerExtras::WriteMakefile
   (NAME         => 'Image-Base-GD',
-   ABSTRACT     => 'Image::Base on PNG files using GD.',
+   ABSTRACT     => 'Image::Base on PNG and other files using GD.',
    VERSION_FROM => 'lib/Image/Base/GD.pm',
    AUTHOR       => 'Kevin Ryde <user42@zip.com.au>',
    LICENSE      => 'gpl',
@@ -46,6 +46,13 @@ MyMakeMakerExtras::WriteMakefile
    META_MERGE =>
    { resources =>
      { homepage => 'http://user42.tuxfamily.org/image-base-gd/index.html',
+     },
+     optional_features =>
+     { maximum_tests =>
+       { description => 'Have "make test" do as much as possible.',
+         requires => { 'Test::Weaken' => '2.000',
+                     },
+       },
      },
    },
   );

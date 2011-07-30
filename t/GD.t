@@ -20,7 +20,7 @@
 use 5.006;
 use strict;
 use warnings;
-use Test::More tests => 1598;
+use Test::More tests => 2588;
 
 use lib 't';
 use MyTestHelpers;
@@ -128,7 +128,7 @@ sub my_bounding_box_and_sides {
 # VERSION
 
 {
-  my $want_version = 11;
+  my $want_version = 12;
   is ($Image::Base::GD::VERSION, $want_version, 'VERSION variable');
   is (Image::Base::GD->VERSION,  $want_version, 'VERSION class method');
 
@@ -155,8 +155,16 @@ sub my_bounding_box_and_sides {
 # _colour_to_rgb255()
 
 {
-  foreach my $elem (['#AABBCC', [0xAA, 0xBB, 0xCC]],
+  foreach my $elem (['#000', [0,0,0]],
+                    ['#ABC', [0xAA, 0xBB, 0xCC]],
+                    ['#abc', [0xAA, 0xBB, 0xCC]],
+
+                    ['#AABBCC', [0xAA, 0xBB, 0xCC]],
                     ['#aabbcc', [0xAA, 0xBB, 0xCC]],
+
+                    ['#AA1BB2CC3', [0xAA, 0xBB, 0xCC]],
+                    ['#aa9bb9cc9', [0xAA, 0xBB, 0xCC]],
+
                     ['#0123456789AB', [0x01, 0x45, 0x89]],
                     ['#AB03CD02EF01', [0xAB, 0xCD, 0xEF]],
                     ['#abcdabcdabcd', [0xAB, 0xAB, 0xAB]],
@@ -259,7 +267,7 @@ sub my_bounding_box_and_sides {
 
 {
   my $image = Image::Base::GD->new (-width => 20,
-                                                    -height => 10);
+                                    -height => 10);
   $image->rectangle (0,0, 19,9, '#000000', 1);
   $image->line (5,5, 8,8, '#FFFFFF', 0);
   is (my_bounding_box ($image, 5,5, 8,8, '#000000'),
@@ -330,7 +338,7 @@ foreach my $truecolor (1,0) {
 }
 {
   my $image = Image::Base::GD->new (-width => 20,
-                                                    -height => 10);
+                                    -height => 10);
   $image->rectangle (0,0, 19,9, '#000000', 1);
   $image->rectangle (0,0, 2,2, '#FFFFFF', 1);
   is (my_bounding_box_and_sides ($image, 0,0, 2,2, '#000000'),
@@ -478,6 +486,7 @@ foreach my $truecolor (1,0) {
   require MyTestImageBase;
   my $image = Image::Base::GD->new (-width => 21,
                                     -height => 10);
+  MyTestImageBase::check_diamond ($image);
   MyTestImageBase::check_image ($image);
 }
 

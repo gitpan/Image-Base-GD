@@ -26,23 +26,23 @@ use GD;
 use Devel::Comments;
 
 {
-  require Image::Xbm;
-  my $image = Image::Xbm->new(-width=>2,-height=>1);
-  $image->xybit(0,0, 0);
-  $image->xybit(1,0, 1);
-  $image->save('t/GD-xbm.xbm');
-  exit 0;
-}
-{
   require Image::Xpm;
   my $image = Image::Xpm->new(-width=>2,-height=>1);
   $image->xy(0,0,'#FFFFFF');
   $image->xy(1,0,'#000000');
-  $image->save('t/GD-xpm.xpm');
+  $image->save('t/GD-format-xpm.xpm');
   exit 0;
 }
 {
-  open my $fh, '<', 't/GD-xpm.xpm' or die;
+  require Image::Xbm;
+  my $image = Image::Xbm->new(-width=>2,-height=>1);
+  $image->xybit(0,0, 0);
+  $image->xybit(1,0, 1);
+  $image->save('t/GD-format-xbm.xbm');
+  exit 0;
+}
+{
+  open my $fh, '<', 't/GD-format-xpm.xpm' or die;
   my $gd = GD::Image->newFromXpm($fh);
   ### $gd
   exit 0;

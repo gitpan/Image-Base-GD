@@ -20,7 +20,7 @@
 use 5.006;
 use strict;
 use warnings;
-use Test::More;
+use Test::More tests => 8;
 
 use lib 't';
 use MyTestHelpers;
@@ -28,27 +28,24 @@ BEGIN { MyTestHelpers::nowarnings() }
 
 use Image::Base::GD;
 
-use GD;
-eval { GD::Image->newFromXpm('t/GD-xpm.xpm') }
-  or plan skip_all => "due to no xpm support in GD -- $@";
-
-plan tests => 12;
-
 
 #------------------------------------------------------------------------------
-# load() only for xpm
+# load() only for xbm
 
-my $filename = 't/GD-xpm.xpm';
+my $filename = 't/GD-format-xbm.xbm';
 
 # new(-file)
 {
   my $image = Image::Base::GD->new (-file => $filename);
+  $image->add_colours('#111111','#222222');
   is ($image->get('-file'), $filename);
-  is ($image->get('-file_format'), 'xpm');
+  is ($image->get('-file_format'), 'xbm');
   is ($image->get('-width'), 2);
   is ($image->get('-height'), 1);
-  is ($image->xy(0,0), '#FFFFFF');
-  is ($image->xy(1,0), '#000000');
+
+  # seems to read 0 as #FFFFFF and 1 as #000000, is that right?
+  # is ($image->xy(0,0), '#FFFFFF');
+  # is ($image->xy(1,0), '#000000');
 }
 
 # load()
@@ -56,12 +53,15 @@ my $filename = 't/GD-xpm.xpm';
   my $image = Image::Base::GD->new (-width => 10,
                                     -height => 10);
   $image->load ($filename);
+  $image->add_colours('#111111','#222222');
   is ($image->get('-file'), $filename);
-  is ($image->get('-file_format'), 'xpm');
+  is ($image->get('-file_format'), 'xbm');
   is ($image->get('-width'), 2);
   is ($image->get('-height'), 1);
-  is ($image->xy(0,0), '#FFFFFF');
-  is ($image->xy(1,0), '#000000');
+
+  # seems to read 0 as #FFFFFF and 1 as #000000, is that right?
+  # is ($image->xy(0,0), '#FFFFFF');
+  # is ($image->xy(1,0), '#000000');
 }
 
 exit 0;

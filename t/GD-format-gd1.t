@@ -30,22 +30,18 @@ use Image::Base::GD;
 
 
 #------------------------------------------------------------------------------
-# load() only for xbm
+# load() original GD 1.x format
 
-my $filename = 't/GD-xbm.xbm';
+my $filename = 't/GD-format-gd1.gd';
 
 # new(-file)
 {
   my $image = Image::Base::GD->new (-file => $filename);
   $image->add_colours('#111111','#222222');
   is ($image->get('-file'), $filename);
-  is ($image->get('-file_format'), 'xbm');
-  is ($image->get('-width'), 2);
-  is ($image->get('-height'), 1);
-
-  # seems to read 0 as #FFFFFF and 1 as #000000, is that right?
-  # is ($image->xy(0,0), '#FFFFFF');
-  # is ($image->xy(1,0), '#000000');
+  is ($image->get('-file_format'), 'gd');
+  is ($image->get('-width'), 13);
+  is ($image->get('-height'), 17);
 }
 
 # load()
@@ -55,13 +51,9 @@ my $filename = 't/GD-xbm.xbm';
   $image->load ($filename);
   $image->add_colours('#111111','#222222');
   is ($image->get('-file'), $filename);
-  is ($image->get('-file_format'), 'xbm');
-  is ($image->get('-width'), 2);
-  is ($image->get('-height'), 1);
-
-  # seems to read 0 as #FFFFFF and 1 as #000000, is that right?
-  # is ($image->xy(0,0), '#FFFFFF');
-  # is ($image->xy(1,0), '#000000');
+  is ($image->get('-file_format'), 'gd');
+  is ($image->get('-width'), 13);
+  is ($image->get('-height'), 17);
 }
 
 exit 0;
