@@ -23,7 +23,7 @@ use warnings;
 use Carp;
 
 use vars '$VERSION', '@ISA';
-$VERSION = 12;
+$VERSION = 13;
 
 use Image::Base 1.12; # version 1.12 for ellipse() $fill
 @ISA = ('Image::Base');
@@ -383,13 +383,14 @@ sub diamond {
                           $self->colour_to_index($colour));
 
   } else {
-
-    my $xh = ($x2 - $x1 + 1);
-    my $yh = ($y2 - $y1 + 1);
-    my $xeven = ! ($xh & 1);
-    my $yeven = ! ($yh & 1);
+    my $xh = ($x2 - $x1);
+    my $yh = ($y2 - $y1);
+    my $xeven = ($xh & 1);
+    my $yeven = ($yh & 1);
     $xh = int($xh / 2);
     $yh = int($yh / 2);
+    ### assert: $x1+$xh == $x2-$xh || $x1+$xh+1 == $x2-$xh
+    ### assert: $y1+$yh == $y2-$yh || $y1+$yh+1 == $y2-$yh
 
     my $poly = GD::Polygon->new;
     $poly->addPt ($x1+$xh,$y1);  # top centre
@@ -409,6 +410,7 @@ sub diamond {
     # top again
     if ($xeven) { $poly->addPt ($x2-$xh,$y1); }
 
+    ### $poly
     my $method = ($fill ? 'filledPolygon' : 'openPolygon');
     $gd->$method ($poly, $self->colour_to_index($colour));
   }

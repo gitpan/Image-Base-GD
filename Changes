@@ -16,6 +16,10 @@ You can get a copy of the GNU General Public License online at
 <http://www.gnu.org/licenses/>.
 
 
+
+Version 13, August 2011
+    - fix diamond() coordinates
+
 Version 12, July 2011
     - new -quality_percent option for JPEG
     - diamond() using polygon
