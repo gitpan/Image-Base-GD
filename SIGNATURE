@@ -15,35 +15,36 @@ not run its Makefile.PL or Build.PL.
 Hash: SHA1
 
 SHA1 842745cb706f8f2126506f544492f7a80dbe29b3 COPYING
-SHA1 aa3742d41e13079d597420797279161ca9dd191a Changes
-SHA1 0fa030ba8603dde76f314e57415fcd800ba01159 MANIFEST
-SHA1 1d745ef4cc154d3b13bfee6d1048ac4135fc1aa7 MANIFEST.SKIP
-SHA1 efa9e8c20f14723b6a7bf7074609ae7f110846cf META.yml
-SHA1 356856caff1b2f91ff0753a39b3241954aecc3c1 Makefile.PL
-SHA1 0b8253f3cb847f1e1ac1eac446eb47f25062b69b debian/changelog
+SHA1 c9bd1ef9e4b6420e9febe14837554a6ad49f4ea4 Changes
+SHA1 09a7bfbc6981b7f4bba2eed459c9c1c055c5c5b9 MANIFEST
+SHA1 6e3dfa4a933a1a5da6c934cca324fc40495b2f5d MANIFEST.SKIP
+SHA1 ae855e032a7234445ba0c0aa9ead7c2e2f3d6e02 META.yml
+SHA1 f292480679c22b1b2a767c0a04fa671e93cf5aaf Makefile.PL
+SHA1 83251f161322e11b3a6ed95e00f8c8cd0e29b394 debian/changelog
 SHA1 ac3478d69a3c81fa62e60f5c3696165a4e5e6ac4 debian/compat
-SHA1 7a024c71a8602dd731108e7066e21f23f6419884 debian/control
-SHA1 03a4b3e6626edf48811e3c2364ae645396347adb debian/copyright
+SHA1 54090ae87d337c1f83ae4c92e0f1d3a60c9894d6 debian/control
+SHA1 deedf5add8ab2b113b3897af895184b600b4afc9 debian/copyright
 SHA1 a9a2e9df45d691a9c8767baa95361f64c78b8c8d debian/rules
 SHA1 61652cd1568dcf2614df833eba241755eee34e89 debian/source/format
 SHA1 3ee991b04806130c785d10be5ac282fc5f42221e debian/watch
-SHA1 62b6887cb9848d2b2c56f0d3ce5dc46cd6f6d48d devel/Makefile
+SHA1 d0775cc1f335ebbfdeac3f1940a38b5cb96d4015 devel/Makefile
+SHA1 901ddfe352814cbbdc5fdf69d28286b586698ec3 devel/exe-gd-format.c
+SHA1 afc68005f4779488424bd0f253369e69c4d518d4 devel/exe-misc.c
 SHA1 7986a0c8bda6a806e06e20bf3511314906b96f67 devel/gd-format.pl
 SHA1 9129d3bcaed9356e98c301429ba43f8e4a9802d2 devel/gd-svg.pl
-SHA1 5c4649e6b393ce303b364700bfae79dca7d507ee devel/gd-window.pl
-SHA1 1ff636964f23aff378bbc7bc6a5b3616713dceab devel/gd.pl
+SHA1 0f90f87feee652ee45432be77370fe3ccfb3ed26 devel/gd-window.pl
+SHA1 5fa8c213d7ad0c0ae86cf66b7a8011c527bae240 devel/gd.pl
 SHA1 165beb2ad03006d701ba0c04c9b448cabc1aa561 devel/gif8.pl
 SHA1 4cb12a48543a8436cc0ef62ae1d90012a75e4e49 devel/image-wmf.pl
 SHA1 25b488c4b6627b02c30184cd403f9916eef3b9ba devel/jpeg.pl
-SHA1 afc68005f4779488424bd0f253369e69c4d518d4 devel/misc.c
-SHA1 74d97a7e6ae5a43dcb8164dcec8c23f67c4780fc devel/run.pl
+SHA1 d7081e91f34ccfa16b7003ccb0a5339a10fea09c devel/run.pl
 SHA1 64e85aad1b8bbb7aba2bf92f0c158586fa1be338 devel/svg.pl
 SHA1 e34b5916a81e7ff7d5da5ba0e7986698c098b86d devel/unused.pl
 SHA1 0f62481e290daa3a7ed09f081b3eaadeda3c3dd1 devel/wbmp.pl
 SHA1 e69c08fd718fd8587934a668745966cc0aeabf56 devel/xpm.pl
-SHA1 e49e071a43390ddb233272dbf39fbaf2947b1cd6 inc/MyMakeMakerExtras.pm
+SHA1 ce6e51f801a3105a8f1b204b311aeb147c37058e inc/MyMakeMakerExtras.pm
 SHA1 7a988b2aa7ed09f1cb9029a1ef3f0e2139dca0cf inc/my_pod2html
-SHA1 62376ade2cfe9401b92150adce4b5513eb144f2a lib/Image/Base/GD.pm
+SHA1 3c863192e6bff4289b74bf2075eb2fc049a3d3a2 lib/Image/Base/GD.pm
 SHA1 21cb97e7fb72948292e1b8779d1155b3796abd1c t/GD-format-gd.t
 SHA1 65519a07bdb4a49996d963d4130dbc4c2d4c7863 t/GD-format-gd1.gd
 SHA1 f9ad504481590f457e92bea9bcbdb3f15c58b339 t/GD-format-gd1.t
@@ -55,27 +56,25 @@ SHA1 81d8fcb665e7d233e3a37d7321c295846d1e0503 t/GD-format-xbm.t
 SHA1 f9e105486a22d954b61f7816c705f4ea7496d435 t/GD-format-xbm.xbm
 SHA1 f8b1a09917ec9fb26e8ac67a12374735b3f54b14 t/GD-format-xpm.t
 SHA1 665b92f2da55a20ab331834f6ff38ab110123375 t/GD-format-xpm.xpm
-SHA1 45a145ac51c68adbefa47e2c5bf398de1ac5792a t/GD-use.t
+SHA1 e9c7a11f0cc27d9333f410712a6a6905b485a4cd t/GD-use.t
 SHA1 ae21d62c65457be485eb40f1865e718fba22166c t/GD-weaken.t
-SHA1 a5584a6a5758990d47e4aac79a0d0f2dd9fd05e4 t/GD.t
+SHA1 14bd1bb8357b92ec2979e419e0c7340b30fe1fdc t/GD.t
 SHA1 6b794018f4abdf2676956d0c94fcb82bddd81338 t/GIF8.png
-SHA1 016f6f5865d54130d50f400fb630091bd1a6c76f t/MyTestHelpers.pm
-SHA1 2844313f42e403c3f519e5a22c01cb3c92ca0454 t/MyTestImageBase.pm
+SHA1 969664973af9de9d898008e3ef280892b8d63244 t/MyTestHelpers.pm
+SHA1 f0fb4938250b2c5be37363f238c5130fd583df84 t/MyTestImageBase.pm
 SHA1 da39a3ee5e6b4b0d3255bfef95601890afd80709 t/empty.dat
-SHA1 d52c04aceb87abf24fe7a4bff3ad7c2b752b9e7a t/lib/Test/Without/GD.pm
-SHA1 2f0356f45d4558405eeb04aa0d51593d069386ab t/lib/Test/Without/without-gd.pl
-SHA1 0279c9310ec528d10a2a14e602bf98f1c776cce1 xt/0-META-read.t
-SHA1 219395eb91b03829e6f14db4ebd57d88ea972e61 xt/0-Test-ConsistentVersion.t
-SHA1 8a5e0f34131de34e584fbb1939c191a152566155 xt/0-Test-DistManifest.t
-SHA1 cc04a5fe5d8b8b38bfd56453d5d2686c8ea58783 xt/0-Test-Pod.t
-SHA1 8cc52e23427a82cfef5802bf512b13c65de2687a xt/0-Test-Synopsis.t
-SHA1 194f76a77d4b022a8b707932d3a45be310400360 xt/0-Test-YAML-Meta.t
-SHA1 c03e001ac27b9cb5954174852eb3087d758334d2 xt/0-file-is-part-of.t
+SHA1 811028548aa4b360b5086d1af3150f9dde348aa6 xt/0-META-read.t
+SHA1 c9e7a47e1f397eb5f46d7e4ef21754d9df76e36e xt/0-Test-ConsistentVersion.t
+SHA1 d9e7f38a8dcfdb76c56951e4214be8eeda2e2289 xt/0-Test-DistManifest.t
+SHA1 9496e4a2a2734c7093ab6961900dd7a55800976e xt/0-Test-Pod.t
+SHA1 083242d959c1a9242c874982e4585872a95bec93 xt/0-Test-Synopsis.t
+SHA1 ec454b1b524d2d0b35e5a7d8292ad13d82becab5 xt/0-Test-YAML-Meta.t
+SHA1 2fb2ce60ce5c740d1eb7e3b55a96f3ccb84d38c3 xt/0-file-is-part-of.t
 SHA1 daba2840c7f128371d42516619a0e04fee2f5ff4 xt/0-no-debug-left-on.t
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.4.11 (GNU/Linux)
 
-iD8DBQFOVs9SLFMCIV9q3ToRAkfYAJ9VBIAUhe981q5aJFdMahljhlxgHgCcCSgg
-wiG/jqeZyrct9CJ35gRVQL0=
-=8rAS
+iD8DBQFPLE8zLFMCIV9q3ToRAlvOAKC51GDTwgVulAq9rz1w8v/djXf55ACghxzN
+j4XHmgMazzuO2KA7GBRBtHI=
+=NiL3
 -----END PGP SIGNATURE-----

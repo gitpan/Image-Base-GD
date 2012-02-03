@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-# Copyright 2010, 2011 Kevin Ryde
+# Copyright 2010, 2011, 2012 Kevin Ryde
 
 # This file is part of Image-Base-GD.
 #
@@ -22,6 +22,24 @@ use strict;
 use warnings;
 
 use Smart::Comments;
+
+{
+  # rectangle off-screen
+
+  require Image::Base::GD;
+  my $image = Image::Base::GD->new (-width => 10, -height => 5);
+  $image->rectangle (0,0, 9,4, 'black', 1); # filled
+
+  $image->rectangle (2, -1, 8, -1, '#FFFFFF', 1);
+
+  #-10,-10,6,6, 'white',1);
+  #  $image->rectangle (8,8, 100,100, 'white',1);
+
+  $image->save('/tmp/x.png');
+  system ("convert  -monochrome /tmp/x.png /tmp/x.xpm && cat /tmp/x.xpm");
+
+  exit 0;
+}
 
 {
   require Image::Base::GD;

@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-# Copyright 2010, 2011 Kevin Ryde
+# Copyright 2010, 2011, 2012 Kevin Ryde
 
 # This file is part of Image-Base-GD.
 #
@@ -29,8 +29,8 @@ use Smart::Comments;
   {
     my $index = $outer_gd->colorAllocate (0,0,0);
     ### $index
-  }    
-#   sub $name { 
+  }
+#   sub $name {
 #     my $s = shift;
 #     my $res = $s->{im}->$name(@_);
 #     $s->postRenderAdjustment();

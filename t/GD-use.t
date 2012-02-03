@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-# Copyright 2010, 2011 Kevin Ryde
+# Copyright 2010, 2011, 2012 Kevin Ryde
 
 # This file is part of Image-Base-GD.
 #
@@ -17,7 +17,7 @@
 # You should have received a copy of the GNU General Public License along
 # with Image-Base-GD.  If not, see <http://www.gnu.org/licenses/>.
 
-
+require 5;
 use Image::Base::GD;
 
 use Test;

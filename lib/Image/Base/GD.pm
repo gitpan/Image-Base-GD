@@ -1,4 +1,4 @@
-# Copyright 2010, 2011 Kevin Ryde
+# Copyright 2010, 2011, 2012 Kevin Ryde
 
 # This file is part of Image-Base-GD.
 #
@@ -23,14 +23,13 @@ use warnings;
 use Carp;
 
 use vars '$VERSION', '@ISA';
-$VERSION = 13;
+$VERSION = 14;
 
 use Image::Base 1.12; # version 1.12 for ellipse() $fill
 @ISA = ('Image::Base');
 
-
 # uncomment this to run the ### lines
-#use Devel::Comments '###';
+#use Smart::Comments '###';
 
 
 sub new {
@@ -106,7 +105,7 @@ sub set {
     my $gd = $self->{'gd'};
     if (delete $param{'-truecolor'}) {
       if (! $gd->isTrueColor) {
-        die "How to turn palette into truecolor?"
+        die "How to turn palette into truecolor?";
       }
     } else {
       if ($gd->isTrueColor) {
@@ -290,6 +289,8 @@ sub save {
     or croak "Error writing $filename: $!";
 }
 
+#------------------------------------------------------------------------------
+
 sub xy {
   my ($self, $x, $y, $colour) = @_;
   #### Image-Base-GD xy: $x,$y,$colour
@@ -312,6 +313,7 @@ sub xy {
     return sprintf ('#%02X%02X%02X', $gd->rgb($pixel));
   }
 }
+
 sub line {
   my ($self, $x1, $y1, $x2, $y2, $colour) = @_;
   ### Image-Base-GD line: @_
@@ -319,17 +321,29 @@ sub line {
 }
 sub rectangle {
   my ($self, $x1, $y1, $x2, $y2, $colour, $fill) = @_;
-  ### Image-Base-GD rectangle: @_
+  ### Image-Base-GD rectangle: @_[1..$#_]
+
   # ### index: $self->colour_to_index($colour)
 
-  # libgd circa 2.0.35 draws a $y1==$y2 unfilled rectangle with dodgy sides
-  # like
+  # libgd circa 2.0.35 gdImageFilledRectangle() has a bug where if the y1/y2
+  # range is all negative then it draws a row of pixels at y=0.  Think it's
+  # a bug, the comments in the code suggest it's supposed to drawn nothing
+  # for all-negative.  In any case avoid this in the interests of behaving
+  # like other Image-Base new style clipping 0,0,width,height.
+  #
+  if ($y2 < 0) {
+    ### Y range all negative ...
+    return;
+  }
+
+  # libgd circa 2.0.35 has a bug where it draws a $y1==$y2 unfilled
+  # rectangle with dodgy sides like
   #
   #     *      *
   #     ********
   #     *      *
   #
-  # As a workaround send that to filledRectangle() instead.
+  # As a workaround send $y1==$y2 to filledRectangle() instead.
   #
   my $method = ($fill || $y1 == $y2
                 ? 'filledRectangle'
@@ -389,8 +403,8 @@ sub diamond {
     my $yeven = ($yh & 1);
     $xh = int($xh / 2);
     $yh = int($yh / 2);
-    ### assert: $x1+$xh == $x2-$xh || $x1+$xh+1 == $x2-$xh
-    ### assert: $y1+$yh == $y2-$yh || $y1+$yh+1 == $y2-$yh
+    ### assert: $x1+$xh+$xeven == $x2-$xh
+    ### assert: $y1+$yh+$yeven == $y2-$yh
 
     my $poly = GD::Polygon->new;
     $poly->addPt ($x1+$xh,$y1);  # top centre
@@ -528,7 +542,7 @@ sub _colour_to_rgb255 {
 1;
 __END__
 
-=for stopwords GD gd libgd filename Ryde Zlib Zlib's truecolor RGBA PNG png JPEG jpeg XPM WBMP SVG svg GIF
+=for stopwords GD gd libgd filename Ryde Zlib Zlib's truecolor RGBA PNG png JPEG jpeg XPM WBMP SVG svg GIF wmf libjpeg
 
 =head1 NAME
 
@@ -567,11 +581,11 @@ other formats out of C<Image::Base> code.
 Colour names for drawing are
 
     GD::Simple->color_names()
-    "None"           transparent
     "#RGB"           hex upper or lower case
     "#RRGGBB"
     "#RRRGGGBBB"
     "#RRRRGGGGBBBB"
+    "None"           transparent
 
 See L<GD::Simple> for its C<color_names()> list.  Special "None" means
 transparent.  Colours are allocated when first used.  GD works in 8-bit
@@ -589,7 +603,7 @@ C<GD> can read and write
     gd       GD's own format, raw
     gd2      GD's own format, compressed
 
-And read only,
+And read-only,
 
     xpm      with libXpm
     xbm
@@ -598,34 +612,36 @@ PNG, JPEG and XPM are available if libgd is compiled with the respective
 support libraries.  GIF may not be available if the Perl C<GD> interface was
 built with its option to disable GIF.
 
-C<load()> auto-detects the format and calls the corresponding
+C<load()> auto-detects the file format and calls the corresponding
 C<newFromPng()> etc.  "gd" format differs between libgd 1.x and 2.x.  libgd
 2.x can load the 1.x format, but always writes 2.x so that's what C<save()>
-here will give.  Both "gd" formats are an uncompressed byte dump mainly
-intended for temporary files.
+here gives.  Both "gd" formats are a byte dump mainly intended for temporary
+files.
 
 WBMP is a bitmap format and is treated by GD as colours black "#000000" for
-0 and white "#FFFFFF" for 1.  On save any non-black is treated as white and
-as 1 too, but it's probably not a good idea to depend on that.
+0 and white "#FFFFFF" for 1.  On save any non-black is treated as white so 1
+too, but it's probably not a good idea to depend on that.
 
 =head2 Other GD Modules
 
 Some other modules implement a GD-like interface with other output types or
-features.  To the extent they're GD-compatible they ought to work passed in
-as a C<-gd> object.
+features.  To the extent they're GD-compatible they should work passed in as
+a C<-gd> object here.
 
-C<GD::SVG::Image> (see L<GD::SVG>) can be saved by setting C<-file_format>
-to "svg".  (But see C<Image::Base::SVG> to go directly to an C<SVG> module
+C<GD::SVG::Image> (see L<GD::SVG>) can be saved with C<-file_format> set to
+"svg".  (Or see C<Image::Base::SVG> to go directly to an C<SVG> module
 object if that's desired.)
 
 C<Image::WMF> (see L<Image::WMF>) can be saved by setting C<-file_format>
 to "wmf".
 
 C<GD::Window> (see L<GD::Window>) as of its version 0.02 almost works in
-C<passThrough> mode, but look for a bug fix for that C<passThrough> post
-0.02.
+C<passThrough> mode, but look for a bug fix post 0.02.
 
 =head1 FUNCTIONS
+
+See L<Image::Base/FUNCTIONS> for the behaviour common to all Image-Base
+classes.
 
 =over 4
 
@@ -647,8 +663,8 @@ Or a C<GD::Image> object can be given,
 =item C<$new_image = $image-E<gt>new (key=E<gt>value,...)>
 
 Create and return a copy of C<$image>.  The GD within C<$image> is cloned
-(per C<$gd-E<gt>clone>).  The optional parameters are applied to the new
-image as per C<set>.
+(per C<$gd-E<gt>clone()>).  The optional parameters are applied to the new
+image as per C<set()>.
 
     # copy image, new compression level
     my $new_image = $image->new (-zlib_compression => 9);
@@ -681,8 +697,8 @@ Draw an ellipse within the rectangle with top-left corner C<$x1>,C<$y1> and
 bottom-right C<$x2>,C<$y2>.  Optional C<$fill> true means a filled ellipse.
 
 In the current implementation ellipses with odd length sides (meaning
-C<$x2-$x1+1> and C<$y2-$y1+1> both odd numbers) are drawn with GD and the
-rest go to C<Image::Base> because GD circa 2.0.36 doesn't seem to draw even
+C<$x2-$x1+1> and C<$y2-$y1+1> both odd numbers) are drawn with GD.  The rest
+go to C<Image::Base> because GD circa 2.0.36 doesn't seem to draw even
 widths very well.  This different handling for different sizes is a bit
 inconsistent.
 
@@ -694,11 +710,11 @@ functions.
     $image->add_colours ('red', 'green', '#FF00FF');
 
 The drawing functions automatically add a colour if it doesn't already exist
-so C<add_colours> in not needed, but it can be used to initialize the
+so C<add_colours()> in not needed, but it can be used to initialize the
 palette with particular desired colours.
 
-For a truecolor GD C<add_colours> does nothing since in that case each pixel
-has its own RGBA, rather than an index into a palette.
+For a truecolor GD C<add_colours()> does nothing since in that case each
+pixel has its own RGBA rather than an index into a palette.
 
 =item C<< $image->load >>
 
@@ -774,9 +790,9 @@ Putting colour "None" into pixels requires GD "alpha blending" turned off.
 C<Image::Base::GD> turns off blending for GD objects it creates, but
 currently if you pass in a C<-gd> then you must set the blending yourself if
 you're going to use None.  Is that the best way?  The ideal might be to save
-and restore while drawing None, but there's no apparent way to read the
-blending setting out of a GD to later restore.  Alternately maybe turn
-blending off and leave it off on first drawing any None.
+and restore while drawing None, but there's no apparent way to read back the
+blending setting out of a GD to later restore.  Or maybe turn blending off
+and leave it off on first drawing any None.
 
 =head1 SEE ALSO
 
@@ -795,7 +811,7 @@ http://user42.tuxfamily.org/image-base-gd/index.html
 
 =head1 LICENSE
 
-Image-Base-GD is Copyright 2010, 2011 Kevin Ryde
+Image-Base-GD is Copyright 2010, 2011, 2012 Kevin Ryde
 
 Image-Base-GD is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by the

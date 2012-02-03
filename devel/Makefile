@@ -1,4 +1,4 @@
-# Copyright 2010, 2011 Kevin Ryde
+# Copyright 2010, 2011, 2012 Kevin Ryde
 
 # This file is part of Image-Base-GD.
 #
@@ -19,3 +19,9 @@ CFLAGS := -Wall -g $(shell gdlib-config --cflags)
 # LOADLIBES := -lgd $(shell gdlib-config --libs)
 # LOADLIBES := /so/gd/libgd2-2.0.36~rc1~dfsg/debian/tmp-libgd2-xpm/usr/lib/libgd.a $(shell gdlib-config --libs)
 LOADLIBES := /so/gd/libgd2-2.0.36~rc1~dfsg/.libs/libgd.a $(shell gdlib-config --libs)
+
+
+exe-gd-format: exe-gd-format.c
+	gcc -I /so/gd/libgd-1.3 gd-format.c \
+	  /so/gd/libgd-1.3/libgd.a -lm \
+	  -o exe-gd-format

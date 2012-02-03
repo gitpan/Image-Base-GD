@@ -7,6 +7,8 @@ debian/copyright
 debian/rules
 debian/source/format
 debian/watch
+devel/exe-gd-format.c
+devel/exe-misc.c
 devel/gd-format.pl
 devel/gd-svg.pl
 devel/gd-window.pl
@@ -15,7 +17,6 @@ devel/gif8.pl
 devel/image-wmf.pl
 devel/jpeg.pl
 devel/Makefile
-devel/misc.c
 devel/run.pl
 devel/svg.pl
 devel/unused.pl
@@ -44,8 +45,6 @@ t/GD-use.t
 t/GD-weaken.t
 t/GD.t
 t/GIF8.png
-t/lib/Test/Without/GD.pm
-t/lib/Test/Without/without-gd.pl
 t/MyTestHelpers.pm
 t/MyTestImageBase.pm
 xt/0-file-is-part-of.t

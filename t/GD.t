@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-# Copyright 2010, 2011 Kevin Ryde
+# Copyright 2010, 2011, 2012 Kevin Ryde
 
 # This file is part of Image-Base-GD.
 #
@@ -20,11 +20,14 @@
 use 5.006;
 use strict;
 use warnings;
-use Test::More tests => 2588;
+use Test::More tests => 2599;
 
 use lib 't';
 use MyTestHelpers;
 BEGIN { MyTestHelpers::nowarnings() }
+
+# uncomment this to run the ### lines
+#use Smart::Comments;
 
 require Image::Base::GD;
 diag "Image::Base version ", Image::Base->VERSION;
@@ -128,7 +131,7 @@ sub my_bounding_box_and_sides {
 # VERSION
 
 {
-  my $want_version = 13;
+  my $want_version = 14;
   is ($Image::Base::GD::VERSION, $want_version, 'VERSION variable');
   is (Image::Base::GD->VERSION,  $want_version, 'VERSION class method');
 
@@ -349,6 +352,76 @@ foreach my $truecolor (1,0) {
   is ($image->xy (3,3), '#000000');
 }
 
+my $black = '#000000';
+my $white = '#FFFFFF';
+
+sub image_to_bw {
+  my ($image) = @_;
+  my $str = '';
+  foreach my $y (0 .. $image->get('-height')-1) {
+    foreach my $x (0 .. $image->get('-width')-1) {
+      my $colour = $image->xy($x,$y);
+      my $char = ($colour eq $black ? '_'
+                  : $colour eq $white ? '*'
+                  : '?');
+      $str .= $char;
+    }
+    $str .= "\n";
+  }
+  return $str;
+}
+
+foreach my $fill (0, 1) {
+  my $image = Image::Base::GD->new (-width => 10, -height => 5);
+  $image->rectangle (0,0,9,4, $black, 1);
+  $image->rectangle (3,-1, 4,2, $white, $fill);
+  is (image_to_bw($image), <<'HERE');
+___**_____
+___**_____
+___**_____
+__________
+__________
+HERE
+}
+
+{
+  my $image = Image::Base::GD->new (-width => 10, -height => 5);
+  $image->rectangle (0,0,9,4, $black, 1);
+  $image->rectangle (3,-91, 6,2, $white, 1);
+  is (image_to_bw($image), <<'HERE');
+___****___
+___****___
+___****___
+__________
+__________
+HERE
+}
+
+{
+  my $image = Image::Base::GD->new (-width => 10, -height => 5);
+  $image->rectangle (0,0,9,4, $black, 1);
+  $image->rectangle (2,-5, 8,-5, '#FFFFFF', 1);
+  is (image_to_bw($image), <<'HERE');
+__________
+__________
+__________
+__________
+__________
+HERE
+}
+{
+  my $image = Image::Base::GD->new (-width => 10, -height => 5);
+  $image->rectangle (0,0,9,4, $black, 1);
+  $image->rectangle (2,100, 8,200, '#FFFFFF', 1);
+  is (image_to_bw($image), <<'HERE');
+__________
+__________
+__________
+__________
+__________
+HERE
+}
+
 #------------------------------------------------------------------------------
 # ellipse
 
@@ -487,7 +560,8 @@ foreach my $truecolor (1,0) {
   my $image = Image::Base::GD->new (-width => 21,
                                     -height => 10);
   MyTestImageBase::check_diamond ($image);
-  MyTestImageBase::check_image ($image);
+  MyTestImageBase::check_image ($image,
+                               big_fetch_expect => '#000000');
 }
 
 exit 0;
