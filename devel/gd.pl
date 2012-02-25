@@ -27,10 +27,14 @@ use Smart::Comments;
   # rectangle off-screen
 
   require Image::Base::GD;
-  my $image = Image::Base::GD->new (-width => 10, -height => 5);
-  $image->rectangle (0,0, 9,4, 'black', 1); # filled
+  my $w = 30;
+  my $h = 30;
+  my $image = Image::Base::GD->new (-width => $w, -height => $h);
+  $image->rectangle (0,0, $w-1,$h-1, 'black', 1); # filled
 
-  $image->rectangle (2, -1, 8, -1, '#FFFFFF', 1);
+  # $image->line (-41,15,-34,22, 'white');
+  $image->ellipse (-41,15, -34,22, 'white', 1);
+  # $image->xy (-38,15, 'white');
 
   #-10,-10,6,6, 'white',1);
   #  $image->rectangle (8,8, 100,100, 'white',1);

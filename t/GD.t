@@ -20,7 +20,7 @@
 use 5.006;
 use strict;
 use warnings;
-use Test::More tests => 2599;
+use Test::More tests => 2601;
 
 use lib 't';
 use MyTestHelpers;
@@ -131,7 +131,7 @@ sub my_bounding_box_and_sides {
 # VERSION
 
 {
-  my $want_version = 14;
+  my $want_version = 15;
   is ($Image::Base::GD::VERSION, $want_version, 'VERSION variable');
   is (Image::Base::GD->VERSION,  $want_version, 'VERSION class method');
 
@@ -400,7 +400,7 @@ HERE
 {
   my $image = Image::Base::GD->new (-width => 10, -height => 5);
   $image->rectangle (0,0,9,4, $black, 1);
-  $image->rectangle (2,-5, 8,-5, '#FFFFFF', 1);
+  $image->rectangle (2,-5, 8,-5, '#FFFFFF', 1, 'rectangle() Y all negative');
   is (image_to_bw($image), <<'HERE');
 __________
 __________
@@ -413,6 +413,18 @@ HERE
   my $image = Image::Base::GD->new (-width => 10, -height => 5);
   $image->rectangle (0,0,9,4, $black, 1);
   $image->rectangle (2,100, 8,200, '#FFFFFF', 1);
+  is (image_to_bw($image), <<'HERE', 'rectangle() Y all too big');
+__________
+__________
+__________
+__________
+__________
+HERE
+}
+{
+  my $image = Image::Base::GD->new (-width => 10, -height => 5);
+  $image->rectangle (0,0,9,4, $black, 1);
+  $image->rectangle (-8,1, -5,4, '#FFFFFF', 1, 'rectangle() X all negative');
   is (image_to_bw($image), <<'HERE');
 __________
 __________
@@ -421,6 +433,19 @@ __________
 __________
 HERE
 }
+{
+  my $image = Image::Base::GD->new (-width => 10, -height => 5);
+  $image->rectangle (0,0,9,4, $black, 1);
+  $image->rectangle (100,2, 200,4, '#FFFFFF', 1);
+  is (image_to_bw($image), <<'HERE', 'rectangle() X all too big');
+__________
+__________
+__________
+__________
+__________
+HERE
+}
+
 
 #------------------------------------------------------------------------------
 # ellipse

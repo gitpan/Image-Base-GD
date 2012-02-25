@@ -21,10 +21,8 @@ use 5.006;
 use strict;
 use warnings;
 use ExtUtils::MakeMaker;
-use lib 'inc';
-use MyMakeMakerExtras;
 
-MyMakeMakerExtras::WriteMakefile
+WriteMakefile
   (NAME         => 'Image-Base-GD',
    ABSTRACT     => 'Image::Base on PNG and other files using GD.',
    VERSION_FROM => 'lib/Image/Base/GD.pm',

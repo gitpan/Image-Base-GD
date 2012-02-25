@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:               Image-Base-GD
-version:            14
+version:            15
 abstract:           Image::Base on PNG and other files using GD.
 author:
     - Kevin Ryde <user42@zip.com.au>
@@ -24,8 +24,6 @@ no_index:
     directory:
         - t
         - inc
-        - xt
-        - devel
 generated_by:       ExtUtils::MakeMaker version 6.57_05
 meta-spec:
     url:      http://module-build.sourceforge.net/META-spec-v1.4.html

@@ -23,7 +23,7 @@ use warnings;
 use Carp;
 
 use vars '$VERSION', '@ISA';
-$VERSION = 14;
+$VERSION = 15;
 
 use Image::Base 1.12; # version 1.12 for ellipse() $fill
 @ISA = ('Image::Base');
@@ -293,7 +293,8 @@ sub save {
 
 sub xy {
   my ($self, $x, $y, $colour) = @_;
-  #### Image-Base-GD xy: $x,$y,$colour
+  ### Image-Base-GD xy(): $x,$y,$colour
+
   my $gd = $self->{'-gd'};
   if (@_ == 4) {
     $gd->setPixel ($x, $y, $self->colour_to_index($colour));
@@ -316,23 +317,26 @@ sub xy {
 
 sub line {
   my ($self, $x1, $y1, $x2, $y2, $colour) = @_;
-  ### Image-Base-GD line: @_
+  ### Image-Base-GD line(): @_
+
   $self->{'-gd'}->line ($x1,$y1,$x2,$y2, $self->colour_to_index($colour));
 }
+
 sub rectangle {
   my ($self, $x1, $y1, $x2, $y2, $colour, $fill) = @_;
-  ### Image-Base-GD rectangle: @_[1..$#_]
+  ### Image-Base-GD rectangle(): @_[1..$#_]
 
   # ### index: $self->colour_to_index($colour)
 
-  # libgd circa 2.0.35 gdImageFilledRectangle() has a bug where if the y1/y2
-  # range is all negative then it draws a row of pixels at y=0.  Think it's
-  # a bug, the comments in the code suggest it's supposed to drawn nothing
-  # for all-negative.  In any case avoid this in the interests of behaving
-  # like other Image-Base new style clipping 0,0,width,height.
+  # libgd circa 2.0.35 gdImageFilledRectangle() has a bug where if the x1,x2
+  # range is all negative then it draws a pixels in the x=0 left edge.  Or
+  # similarly if y1,y2 all negative then it draws in the y=0 top edge.
+  # Think this is a bug, the comments in the code suggest it's supposed to
+  # drawn nothing for all-negative.  In any case avoid this in the interests
+  # of behaving like other Image-Base new style clipping 0,0,width,height.
   #
-  if ($y2 < 0) {
-    ### Y range all negative ...
+  if ($x2 < 0 || $y2 < 0) {
+    ### all negative, workaround to drawn nothing ...
     return;
   }
 
@@ -374,13 +378,12 @@ sub ellipse {
     ### y centre: $y1 + $yw/2
     ### $xw+1
     ### $yw+1
-    my $method = ($fill ? 'filledEllipse'
-                  : 'ellipse');
+    my $method = ($fill ? 'filledEllipse' : 'ellipse');
     $gd->$method ($x1 + $xw/2, $y1 + $yw/2,
                   $xw+1, $yw+1,
                   $self->colour_to_index($colour));
   } else {
-    ### use Image-Base by pixels
+    ### use Image-Base by pixels ...
     shift->SUPER::ellipse(@_);
   }
 }

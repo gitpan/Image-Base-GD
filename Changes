@@ -17,6 +17,9 @@ You can get a copy of the GNU General Public License online at
 
 
 
+Version 15, February 2012
+    - more rectangle() clip workaround
+
 Version 14, February 2012
     - clip to 0,0,width,height (rectangle() workaround for libgd2.0.36
       which is supposed to do this itself but doesn't)
